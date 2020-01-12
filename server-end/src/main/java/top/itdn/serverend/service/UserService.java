@@ -1,9 +1,7 @@
 package top.itdn.serverend.service;
 
-import org.springframework.stereotype.Component;
-import top.itdn.serverend.entity.UserBean;
-
-import java.util.Map;
+import top.itdn.serverend.entity.User;
+import top.itdn.serverend.entity.vo.ResponseVo;
 
 /**
  * Description
@@ -11,19 +9,52 @@ import java.util.Map;
  * @author : Charles
  * @date : 2020/1/12
  */
-@Component
-public class UserService {
+public interface UserService {
+    /**
+     * 根据id查找用户
+     * @param id
+     * @return User
+     */
+    ResponseVo<User> loadUser(int id);
 
-    public UserBean getUser(String username) {
-        if (! DataMap.getData().containsKey(username)) {
-            return null;
-        }
-        UserBean user = new UserBean();
-        Map<String, String> detail = DataMap.getData().get(username);
-        user.setUsername(username);
-        user.setPassword(detail.get("password"));
-        user.setRole(detail.get("role"));
-        user.setPermission(detail.get("permission"));
-        return user;
-    }
+    /**
+     * 用户注册(用户名，密码)
+     * @param name
+     * @param password
+     * @return User
+     */
+    ResponseVo<User> addUser(String name, String password);
+
+    /**
+     * 用户登录(用户名，密码)
+     * @param name
+     * @param password
+     * @return
+     */
+    ResponseVo<String> checkUser(String name, String password);
+
+    /**
+     * 检查Token
+     * @param token
+     * @return
+     */
+    ResponseVo checkToken(String token);
+
+    /**
+     * 用户更新资料
+     * @param token
+     * @param user
+     * @return
+     */
+    ResponseVo modifyUser(String token, User user);
+
+    /**
+     * 用户修改密码
+     * @param token
+     * @param password
+     * @param newPassword
+     * @return
+     */
+    ResponseVo modifyPassword(String token, String password, String newPassword);
+
 }

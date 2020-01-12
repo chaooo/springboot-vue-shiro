@@ -4,7 +4,7 @@ import org.apache.shiro.ShiroException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import top.itdn.serverend.entity.vo.ResponseVo;
-import top.itdn.serverend.exception.UnauthorizedException;
+import top.itdn.serverend.config.exception.UnauthorizedException;
 
 import javax.servlet.http.HttpServletRequest;
 

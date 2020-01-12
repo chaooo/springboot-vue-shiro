@@ -1,4 +1,4 @@
-package top.itdn.serverend.shiro;
+package top.itdn.serverend.config.shiro;
 
 import org.apache.shiro.authc.AuthenticationToken;
 

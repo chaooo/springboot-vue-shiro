@@ -9,9 +9,6 @@ import org.springframework.web.bind.annotation.*;
 
 import top.itdn.serverend.entity.vo.ResponseVo;
 import top.itdn.serverend.service.UserService;
-import top.itdn.serverend.entity.UserBean;
-import top.itdn.serverend.exception.UnauthorizedException;
-import top.itdn.serverend.util.JwtUtil;
 
 /**
  * Description
@@ -20,10 +17,9 @@ import top.itdn.serverend.util.JwtUtil;
  * @date : 2020/1/12
  */
 @RestController
-public class WebController {
+public class UserController {
 
     private UserService userService;
-
     @Autowired
     public void setService(UserService userService) {
         this.userService = userService;
@@ -32,12 +28,7 @@ public class WebController {
     @PostMapping("/login")
     public ResponseVo login(@RequestParam("username") String username,
                             @RequestParam("password") String password) {
-        UserBean userBean = userService.getUser(username);
-        if (userBean.getPassword().equals(password)) {
-            return new ResponseVo<>(200, "Login success", JwtUtil.sign(username, password));
-        } else {
-            throw new UnauthorizedException();
-        }
+        return userService.checkUser(username, password);
     }
 
     @GetMapping("/article")

@@ -1,4 +1,4 @@
-package top.itdn.serverend.exception;
+package top.itdn.serverend.config.exception;
 
 /**
  * Description

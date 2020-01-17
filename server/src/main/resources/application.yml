@@ -1,18 +1,16 @@
+# port
 server:
-  port: 8081
+  port: 8282
 
+# database
 spring:
-  application:
-    name: admin-server
   datasource:
     url: jdbc:mysql://localhost:3306/shiro_boot?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true
     username: root
-    password: root
+    password: qwe123
 
+#mybatis
 mybatis:
-  mapperLocations: classpath:/mapper/*.xml
-#  redis:
-#    host: 127.0.0.1
-#    port: 6379
-
+  mapper-locations: classpath:mappers/*Mapper.xml
+  type-aliases-package: top.itdn.server.entity
 

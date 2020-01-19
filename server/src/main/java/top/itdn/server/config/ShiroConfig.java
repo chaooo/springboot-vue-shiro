@@ -13,6 +13,7 @@ import org.springframework.context.annotation.DependsOn;
 
 import javax.servlet.Filter;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -25,10 +26,10 @@ import java.util.Map;
 public class ShiroConfig {
 
     @Bean("securityManager")
-    public DefaultWebSecurityManager getManager(MyRealm realm) {
+    public DefaultWebSecurityManager getManager(MyRealm myRealm) {
         DefaultWebSecurityManager manager = new DefaultWebSecurityManager();
         // 使用自己的realm
-        manager.setRealm(realm);
+        manager.setRealm(myRealm);
 
         /*
          * 关闭shiro自带的session，详情见文档
@@ -46,25 +47,26 @@ public class ShiroConfig {
     @Bean("shiroFilter")
     public ShiroFilterFactoryBean factory(DefaultWebSecurityManager securityManager) {
         ShiroFilterFactoryBean factoryBean = new ShiroFilterFactoryBean();
+        factoryBean.setSecurityManager(securityManager);
+        // 拦截器
+        Map<String, String> filterChainDefinitionMap = new LinkedHashMap<String, String>();
+        // 配置不会被拦截的链接 顺序判断，规则：http://shiro.apache.org/web.html#urls-
+        filterChainDefinitionMap.put("/user/regist", "anon");
+        filterChainDefinitionMap.put("/user/login", "anon");
+        filterChainDefinitionMap.put("/user/logout", "anon");
+        filterChainDefinitionMap.put("/user/unauthorized", "anon");
 
         // 添加自己的过滤器并且取名为jwt
-        Map<String, Filter> filterMap = new HashMap<>();
+        Map<String, Filter> filterMap = new HashMap<>(1);
         filterMap.put("jwt", new JwtFilter());
         factoryBean.setFilters(filterMap);
 
-        factoryBean.setSecurityManager(securityManager);
-        factoryBean.setUnauthorizedUrl("/401");
+        // 过滤链定义，从上向下顺序执行，一般将/**放在最为下边
+        filterChainDefinitionMap.put("/**", "jwt");
+        // 未授权返回
+        factoryBean.setUnauthorizedUrl("/user/unauthorized");
 
-        /*
-         * 自定义url规则
-         * http://shiro.apache.org/web.html#urls-
-         */
-        Map<String, String> filterRuleMap = new HashMap<>();
-        // 所有请求通过我们自己的JWT Filter
-        filterRuleMap.put("/**", "jwt");
-        // 访问401和404页面不通过我们的Filter
-        filterRuleMap.put("/401", "anon");
-        factoryBean.setFilterChainDefinitionMap(filterRuleMap);
+        factoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
         return factoryBean;
     }
 

@@ -4,6 +4,7 @@ import org.apache.shiro.ShiroException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import top.itdn.server.exception.UnauthorizedException;
 import top.itdn.server.utils.ResponseVo;
 
@@ -15,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
  * @author : Charles
  * @date : 2020/1/17
  */
+@RestControllerAdvice
 public class ExceptionApi {
     /** 捕捉 shiro 的异常 */
     @ResponseStatus(HttpStatus.UNAUTHORIZED)

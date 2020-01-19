@@ -85,7 +85,7 @@ public class TestUserApi {
 		testHttp("post", "/user/login", params, 0, null);
 	}
 
-	private static final String token  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ1c2VyMSIsInVpZCI6MiwiZXhwIjoxNTc5MjQ5NjExfQ.bBKlzEJVaBPsHCaOHcIw4r3jzHX3-7bBDOTLfvpK-Kg";
+	private static final String token  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ1c2VyMSIsInVpZCI6MiwiZXhwIjoxNTc5NDE5ODc2fQ.wvxpjv7yY-rvFQdLMQnHvnlR4VT1ZAwqOwYKwJjd0FY";
 
 
 	//测试token

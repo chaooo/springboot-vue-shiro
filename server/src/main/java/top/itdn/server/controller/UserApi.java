@@ -15,23 +15,12 @@ import javax.servlet.http.HttpServletRequest;
  * @date : 2020/1/17
  */
 @RestController
-@CrossOrigin(origins="*",methods= {RequestMethod.GET,RequestMethod.POST})
 public class UserApi {
 	/**
 	 * 注入服务类
 	 */
 	@Autowired
 	private UserService userService;
-
-	/**
-	 * 根据id查找用户
-	 * @param id
-	 * @return
-	 */
-	@GetMapping("/user/get")
-	public ResponseVo<User> load(int id) {
-		return userService.loadUser(id);
-	}
 
 	/**
 	 * 用户注册(用户名，密码)
@@ -56,16 +45,6 @@ public class UserApi {
 	}
 
 	/**
-	 * 检查Token
-	 * @param token
-	 * @return
-	 */
-	@PostMapping("/user/token")
-	public ResponseVo verifyToken(String token) {
-		return userService.checkToken(token);
-	}
-
-	/**
 	 * 用户更新资料
 	 * @param user
 	 * @return
@@ -87,4 +66,13 @@ public class UserApi {
 		String token = request.getHeader("X-Token");
 		return userService.modifyPassword(token, password, newPassword);
 	}
+
+	/**
+	 * 处理非法请求
+	 */
+	@GetMapping("/user/unauthorized")
+	public ResponseVo unauthorized(HttpServletRequest request) {
+		return new ResponseVo(-1, "Token失效请重新登录!");
+	}
+
 }

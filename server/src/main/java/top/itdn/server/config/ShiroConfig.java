@@ -70,7 +70,7 @@ public class ShiroConfig {
     }
 
     /**
-     * 下面的代码是添加注解支持
+     * 添加注解支持
      */
     @Bean
     @DependsOn("lifecycleBeanPostProcessor")
@@ -81,12 +81,10 @@ public class ShiroConfig {
         defaultAdvisorAutoProxyCreator.setProxyTargetClass(true);
         return defaultAdvisorAutoProxyCreator;
     }
-
     @Bean
     public LifecycleBeanPostProcessor lifecycleBeanPostProcessor() {
         return new LifecycleBeanPostProcessor();
     }
-
     @Bean
     public AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor(DefaultWebSecurityManager securityManager) {
         AuthorizationAttributeSourceAdvisor advisor = new AuthorizationAttributeSourceAdvisor();

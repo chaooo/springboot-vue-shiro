@@ -19,7 +19,7 @@ import top.itdn.server.utils.JwtUtil;
  * @author : Charles
  * @date : 2020/1/12
  */
- @Slf4j
+@Slf4j
 @Component("MyRealm")
 public class MyRealm extends AuthorizingRealm {
 
@@ -30,7 +30,7 @@ public class MyRealm extends AuthorizingRealm {
 	}
 
     /**
-     * 大坑！，必须重写此方法，不然Shiro会报错
+     * 必须重写此方法，不然Shiro会报错
      */
     @Override
     public boolean supports(AuthenticationToken token) {
@@ -59,7 +59,7 @@ public class MyRealm extends AuthorizingRealm {
 
     /**
      * 获取用户权限信息，包括角色以及权限。
-     * 只有当触发检测用户权限时才会调用此方法，例如checkRole,checkPermission
+     * 只有当触发检测用户权限时才会调用此方法，例如checkRole,checkPermissionJwtToken
      */
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {

@@ -106,5 +106,4 @@ public class JwtUtil {
 		DecodedJWT jwt = JWT.decode(token);
 		return  jwt.getExpiresAt();
 	}
-
 }

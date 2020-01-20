@@ -1,5 +1,5 @@
 # springboot-vue-shiro
-## 基于前后端分离的shiro权限控制
+## 基于前后端分离的shiro权限控制(一)
 
 ### 1. 开始之前
 前后端分离项目中，我们一般采用的是无状态登录：服务端不保存任何客户端请求者信息，客户端需要自己携带着信息去访问服务端，并且携带的信息可以被服务端辨认。
@@ -16,7 +16,8 @@
 ![](http://cdn.chaooo.top/Java/auth-global.png)
 
 ### 2. SpringBoot整合Shiro+JWT
-这里贴出主要逻辑，源码请移步:
+这里贴出主要逻辑，源码请移步:`git clone --branch V1.0 https://github.com/chaooo/springboot-vue-shiro.git
+`
 1. 数据表
 
 ``` sql
@@ -378,7 +379,8 @@ public class Md5Util {
 ```
 
 ### 3. 注册与登录主要逻辑
-这里只贴出主要逻辑，DAO和Mapper映射可查看源码：
+这里只贴出主要逻辑，DAO和Mapper映射可查看源码：`git clone --branch V1.0 https://github.com/chaooo/springboot-vue-shiro.git
+`
 1. Controller
 
 ``` java
@@ -565,3 +567,15 @@ public class ResponseVo<T> {
     }
 }
 ```
+
+> 注：这里的登录认证逻辑在源码的V1.0中，后续版本再加入Token续签和shiro前后端权限管理等。下载认证逻辑源码`git clone --branch V1.0 https://github.com/chaooo/springboot-vue-shiro.git
+`
+
+
+==========================================================
+
+## 基于前后端分离的shiro权限控制(二)
+
+前面我们整合了SpringBoot+Shiro+JWT实现了登录认证，但还没有实现权限控制，这是接下来的工作。
+
+### JWT的Token续签

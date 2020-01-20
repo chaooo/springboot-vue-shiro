@@ -91,6 +91,22 @@ public class MyRealm extends AuthorizingRealm {
      * 参考方案：https://blog.csdn.net/qq394829044/article/details/82763936
      *
      */
-    // ...
-
+    /*public boolean jwtTokenRefresh(String token, String userName, String passWord) {
+        String cacheToken = String.valueOf(redisUtil.get("PREFIX_USER_TOKEN_" + token));
+        if (cacheToken != null && !cacheToken.equals("") && !cacheToken.equals("null")) {
+            // 校验token有效性
+            if (!JwtUtil.verify(cacheToken)) {
+                String newAuthorization = JwtUtil.sign(userName, passWord);
+                redisUtil.set("PREFIX_USER_TOKEN_" + token, newAuthorization);
+                // 设置超时时间
+                redisUtil.expire("PREFIX_USER_TOKEN_" + token, JwtUtil.paraseExpiresTime(token));
+            } else {
+                redisUtil.set("PREFIX_USER_TOKEN_" + token, cacheToken);
+                // 设置超时时间
+                redisUtil.expire("PREFIX_USER_TOKEN_" + token, JwtUtil.paraseExpiresTime(token));
+            }
+            return true;
+        }
+        return false;
+    }*/
 }

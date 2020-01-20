@@ -23,28 +23,6 @@ public class UserApi {
 	private UserService userService;
 
 	/**
-	 * 用户注册(用户名，密码)
-	 * @param account
-	 * @param password
-	 * @return
-	 */
-	@PostMapping("/user/regist")
-	public ResponseVo<String> regist(String account, String password) {
-		return userService.addUser(account, password);
-	}
-
-	/**
-	 * 用户登录(用户名，密码)
-	 * @param account
-	 * @param password
-	 * @return
-	 */
-	@PostMapping("/user/login")
-	public ResponseVo<String> login(String account, String password) {
-		return userService.checkUser(account, password);
-	}
-
-	/**
 	 * 用户更新资料
 	 * @param user
 	 * @return
@@ -67,12 +45,10 @@ public class UserApi {
 		return userService.modifyPassword(token, password, newPassword);
 	}
 
-	/**
-	 * 处理非法请求
-	 */
-	@GetMapping("/user/unauthorized")
-	public ResponseVo unauthorized(HttpServletRequest request) {
-		return new ResponseVo(-1, "Token失效请重新登录!");
+	@GetMapping("/user/test")
+	public ResponseVo modifyPassword() {
+		return new ResponseVo(1, "test");
 	}
+
 
 }

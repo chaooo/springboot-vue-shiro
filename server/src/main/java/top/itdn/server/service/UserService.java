@@ -26,29 +26,6 @@ public interface UserService {
     ResponseVo<User> loadUser(String account);
 
 	/**
-	 * 用户注册(用户名，密码)
-	 * @param account
-	 * @param password
-	 * @return
-	 */
-    ResponseVo<String> addUser(String account, String password);
-
-	/**
-	 * 用户登录(用户名，密码)
-	 * @param account
-	 * @param password
-	 * @return
-	 */
-    ResponseVo<String> checkUser(String account, String password);
-
-	/**
-	 * 检查Token
-	 * @param token
-	 * @return
-	 */
-    ResponseVo checkToken(String token);
-
-	/**
 	 * 用户更新资料
 	 * @param token
 	 * @param user

@@ -1,8 +1,5 @@
 package top.itdn.server;
 
-import top.itdn.server.controller.UserApi;
-import top.itdn.server.utils.JwtUtil;
-import top.itdn.server.utils.ResponseVo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import junit.framework.TestCase;
 import org.junit.Test;
@@ -17,6 +14,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import top.itdn.server.controller.AdminApi;
+import top.itdn.server.utils.ResponseVo;
 
 import java.util.Date;
 
@@ -27,10 +26,10 @@ import java.util.Date;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes=ServerApplication.class)
-public class TestUserApi {
+public class TestAdminApi {
 
 	@Autowired
-	private UserApi controller;
+	private AdminApi controller;
 /**
 	 * 测试SpringMVC处理流程 主要逻辑
 	 * @param uri
@@ -63,31 +62,25 @@ public class TestUserApi {
 		TestCase.assertEquals(eCode, resultJson.getCode());
 	}
 
-
-	private static final String token  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ1c2VyMSIsInVpZCI6MiwiZXhwIjoxNTc5NDE5ODc2fQ.wvxpjv7yY-rvFQdLMQnHvnlR4VT1ZAwqOwYKwJjd0FY";
-
-	//测试用户资料更新
+	//测试注册
 	@Test
-	public void testUPDATE() throws Exception {
+	public void testRegister() throws Exception {
 		//配置参数
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
-		params.set("nickname", "哈哈哈");
-		params.set("token", token);
+		params.set("account", "user2");
+		params.set("password", "123456");
 		//测试
-		testHttp("post", "/user/update", params, 0, token);
+		testHttp("post", "/user/regist", params, 0, null);
 	}
 
-	//测试用户修改密码
+	//测试登录
 	@Test
-	public void testPWD() throws Exception {
+	public void testLogin() throws Exception {
 		//配置参数
 		MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
-		params.set("password", "12345678");
-		params.set("newPassword", "123456");
-		params.set("token", token);
+		params.set("account", "user1");
+		params.set("password", "123456");
 		//测试
-		testHttp("post", "/user/password", params, 0, token);
+		testHttp("post", "/user/login", params, 0, null);
 	}
-
-
 }

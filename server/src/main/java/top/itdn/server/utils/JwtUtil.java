@@ -27,13 +27,13 @@ import com.auth0.jwt.interfaces.JWTVerifier;
  * @date : 2020/1/17
  */
 public class JwtUtil {
-	/** 设置过期时间 */
+	/** 设置过期时间: 30分钟 */
 	private static final long EXPIRE_TIME = 30 * 60 * 1000;
 	/** 服务端的私钥secret,在任何场景都不应该流露出去 */
 	private static final String TOKEN_SECRET = "zhengchao";
 
 	/**
-	 * 生成签名，15分钟过期
+	 * 生成签名，30分钟过期
 	 * @param **User**
 	 * @param **password**
 	 * @return

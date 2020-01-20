@@ -8,8 +8,9 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import top.itdn.server.dao.UserDao;
+
 import top.itdn.server.entity.User;
+import top.itdn.server.service.AdminService;
 import top.itdn.server.utils.JwtUtil;
 
 /**
@@ -22,12 +23,11 @@ import top.itdn.server.utils.JwtUtil;
 @Component("MyRealm")
 public class MyRealm extends AuthorizingRealm {
 
-    private UserDao userDao;
-    @Autowired
-    public MyRealm(UserDao userDao) {
-        this.userDao = userDao;
-    }
-    public MyRealm(){}
+    private AdminService adminService;
+	@Autowired
+	public void setAdminService(AdminService adminService) {
+		this.adminService = adminService;
+	}
 
     /**
      * 大坑！，必须重写此方法，不然Shiro会报错
@@ -45,21 +45,15 @@ public class MyRealm extends AuthorizingRealm {
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken auth) throws AuthenticationException {
         log.info("————————身份认证——————————");
         String token = (String) auth.getCredentials();
+        if (null == token || !JwtUtil.isVerify(token)) {
+            throw new AuthenticationException("token无效!");
+        }
         // 解密获得username，用于和数据库进行对比
         String account = JwtUtil.parseTokenAud(token);
-        if (account == null) {
-            throw new AuthenticationException("token无效");
-        }
-
-        User user = userDao.selectByAccount(account);
-        if (user == null) {
+        User user = adminService.selectByAccount(account);
+        if (null == user) {
             throw new AuthenticationException("用户不存在!");
         }
-
-        if (!JwtUtil.isVerify(token)) {
-            throw new AuthenticationException("用户名或密码错误!");
-        }
-
         return new SimpleAuthenticationInfo(user, token,"MyRealm");
     }
 
@@ -71,7 +65,7 @@ public class MyRealm extends AuthorizingRealm {
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         log.info("————权限认证 [ roles、permissions]————");
         String account = JwtUtil.parseTokenAud(principals.toString());
-        User user = userDao.selectByAccount(account);
+        User user = adminService.selectByAccount(account);
         SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo();
         /* simpleAuthorizationInfo.addRole(user.getRole());
         Set<String> permission = new HashSet<>(Arrays.asList(user.getPermission().split(",")));

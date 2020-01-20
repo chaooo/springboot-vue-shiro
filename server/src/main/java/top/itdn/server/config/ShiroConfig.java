@@ -27,9 +27,9 @@ public class ShiroConfig {
 
     @Bean("securityManager")
     public DefaultWebSecurityManager getManager(MyRealm myRealm) {
-        DefaultWebSecurityManager manager = new DefaultWebSecurityManager();
+        DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
         // 使用自己的realm
-        manager.setRealm(myRealm);
+        securityManager.setRealm(myRealm);
 
         /*
          * 关闭shiro自带的session，详情见文档
@@ -39,9 +39,9 @@ public class ShiroConfig {
         DefaultSessionStorageEvaluator defaultSessionStorageEvaluator = new DefaultSessionStorageEvaluator();
         defaultSessionStorageEvaluator.setSessionStorageEnabled(false);
         subjectDAO.setSessionStorageEvaluator(defaultSessionStorageEvaluator);
-        manager.setSubjectDAO(subjectDAO);
+        securityManager.setSubjectDAO(subjectDAO);
 
-        return manager;
+        return securityManager;
     }
 
     @Bean("shiroFilter")
@@ -51,10 +51,9 @@ public class ShiroConfig {
         // 拦截器
         Map<String, String> filterChainDefinitionMap = new LinkedHashMap<String, String>();
         // 配置不会被拦截的链接 顺序判断，规则：http://shiro.apache.org/web.html#urls-
-        filterChainDefinitionMap.put("/user/regist", "anon");
-        filterChainDefinitionMap.put("/user/login", "anon");
-        filterChainDefinitionMap.put("/user/logout", "anon");
-        filterChainDefinitionMap.put("/user/unauthorized", "anon");
+        filterChainDefinitionMap.put("/register", "anon");
+        filterChainDefinitionMap.put("/login", "anon");
+        filterChainDefinitionMap.put("/unauthorized", "anon");
 
         // 添加自己的过滤器并且取名为jwt
         Map<String, Filter> filterMap = new HashMap<>(1);
@@ -64,7 +63,7 @@ public class ShiroConfig {
         // 过滤链定义，从上向下顺序执行，一般将/**放在最为下边
         filterChainDefinitionMap.put("/**", "jwt");
         // 未授权返回
-        factoryBean.setUnauthorizedUrl("/user/unauthorized");
+        factoryBean.setUnauthorizedUrl("/unauthorized");
 
         factoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
         return factoryBean;

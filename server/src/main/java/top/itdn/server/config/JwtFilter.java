@@ -26,12 +26,9 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
             executeLogin(request, response);
             return true;
         } catch (Exception e) {
-            unauthorized(request, response);
-            return true;
+            unauthorized(response);
+            return false;
         }
-        // 放行，如果在这里返回了false，请求会被直接拦截，用户看不到任何东西
-        // Controller中可以通过 subject.isAuthenticated() 来判断用户是否登入
-        // @RequiresAuthentication 注解来访问控制
     }
     /**
      * 认证
@@ -43,16 +40,15 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
         JwtToken token = new JwtToken(authorization);
         // 提交给realm进行登入，如果错误他会抛出异常并被捕获
         getSubject(request, response).login(token);
-        // 如果没有抛出异常则代表登入成功，返回true
         return true;
     }
     /**
-     * 认证失败 跳转到 /user/unauthorized
+     * 认证失败 跳转到 /unauthorized
      */
-    private void unauthorized(ServletRequest req, ServletResponse resp) {
+    private void unauthorized(ServletResponse resp) {
         try {
             HttpServletResponse httpServletResponse = (HttpServletResponse) resp;
-            httpServletResponse.sendRedirect("/user/unauthorized");
+            httpServletResponse.sendRedirect("/unauthorized");
         } catch (IOException e) {
             log.error(e.getMessage());
         }

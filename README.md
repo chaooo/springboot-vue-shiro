@@ -172,8 +172,6 @@ public class MyRealm extends AuthorizingRealm {
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         log.info("————权限认证 [ roles、permissions]————");
-        String account = JwtUtil.parseTokenAud(principals.toString());
-        User user = sysService.selectByAccount(account);
         SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo();
         /* 暂不编写，此处编写后，controller中可以使用@RequiresPermissions来对用户权限进行拦截 */
         return simpleAuthorizationInfo;
@@ -446,13 +444,13 @@ public interface SysService {
 @Service
 public class SysServiceImpl implements SysService {
 
-    private UserDao userDao;
+    private SysDao sysDao;
     /**
      * 注入DAO
      */
     @Autowired
-    public void setUserDao(UserDao userDao) {
-        this.userDao = userDao;
+    public void setSysDao(SysDao sysDao) {
+        this.sysDao = sysDao;
     }
     /**
      * 用户注册(用户名，密码)
@@ -464,7 +462,7 @@ public class SysServiceImpl implements SysService {
     @Override
     public ResponseVo<String> register(String account, String password) {
         //检查用户名是否被占用
-        User user = userDao.selectByAccount(account);
+        User user = sysDao.selectByAccount(account);
         if(user!=null) {
             return new ResponseVo<>( -1, "用户名被占用");
         }
@@ -480,7 +478,7 @@ public class SysServiceImpl implements SysService {
         //设置注册时间
         user.setCreatetime(new Date());
         //添加到数据库
-        int row = userDao.insertSelective(user);
+        int row = sysDao.insertSelective(user);
         //返回信息
         if(row>0) {
             //生成token给用户
@@ -500,7 +498,7 @@ public class SysServiceImpl implements SysService {
     @Override
     public ResponseVo<String> login(String account, String password) {
         //处理比对密码
-        User user = userDao.selectByAccount(account);
+        User user = sysDao.selectByAccount(account);
         if(user!=null) {
             String  salt = user.getSalt();
             String md5Password = Md5Util.md5(password+salt);
@@ -521,7 +519,7 @@ public class SysServiceImpl implements SysService {
      */
     @Override
     public User selectByAccount(String account) {
-        return userDao.selectByAccount(account);
+        return sysDao.selectByAccount(account);
     }
 }
 ```
@@ -576,7 +574,7 @@ public class ResponseVo<T> {
 ================================================================================
 
 ## 二、权限控制
-前面我们整合了SpringBoot+Shiro+JWT实现了登录认证，但还没有实现权限控制，这是接下来的工作。
+前面我们整合了`SpringBoot+Shiro+JWT`实现了登录认证，但还没有实现权限控制，这是接下来的工作。
 
 ### 1. JWT的Token续签
 #### 1.1 续签思路
@@ -697,7 +695,7 @@ public class SysServiceImpl implements SysService {
     @Override
     public ResponseVo<String> login(String account, String password) {
         //处理比对密码
-        User user = userDao.selectByAccount(account);
+        User user = sysDao.selectByAccount(account);
         if(user!=null) {
             String  salt = user.getSalt();
             String md5Password = Md5Util.md5(password+salt);
@@ -777,4 +775,147 @@ public class MyRealm extends AuthorizingRealm {
 
 
 ### 2. 权限管理
+#### 2.1 首先增加三张数据表
+``` sql
+/** 角色表 */
+DROP TABLE IF EXISTS `sys_role`;
+CREATE TABLE `sys_role` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT COMMENT '主键id',
+  `role_name` VARCHAR(100) DEFAULT NULL COMMENT '角色名称',
+  `description` VARCHAR(100) DEFAULT NULL COMMENT '描述',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=INNODB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='角色表';
+INSERT  INTO `sys_role`(`id`,`role_name`,`description`) VALUES (1,'admin','管理角色'),(2,'user','用户角色');
+/** 权限表 */
+DROP TABLE IF EXISTS `sys_permission`;
+CREATE TABLE `sys_permission` (
+  `id` VARCHAR(32) NOT NULL COMMENT '主键id',
+  `name` VARCHAR(100) DEFAULT NULL COMMENT '菜单标题',
+  `url` VARCHAR(255) DEFAULT NULL COMMENT '路径',
+  `menu_type` INT(11) DEFAULT NULL COMMENT '菜单类型(0:一级菜单; 1:子菜单:2:按钮权限)',
+  `perms` VARCHAR(255) DEFAULT NULL COMMENT '菜单权限编码',
+  `sort_no` INT(10) DEFAULT NULL COMMENT '菜单排序',
+  `del_flag` INT(1) DEFAULT '0' COMMENT '删除状态 0正常 1已删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `index_prem_sort_no` (`sort_no`) USING BTREE,
+  KEY `index_prem_del_flag` (`del_flag`) USING BTREE
+) ENGINE=INNODB DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='菜单权限表';
+INSERT  INTO `sys_permission`(`id`,`name`,`url`,`menu_type`,`perms`,`sort_no`,`del_flag`) VALUES ('1','新增用户','/user/add',2,'user:add',1,0),('2','删除用户','/user/delete',2,'user:delete',2,0),('3','修改用户','/user/update',2,'user:update',3,0),('4','查询用户','/user/list',2,'user:list',4,0);
+/** 角色与权限关联表 */
+DROP TABLE IF EXISTS `sys_role_permission`;
+CREATE TABLE `sys_role_permission` (
+  `id` INT(11) NOT NULL AUTO_INCREMENT,
+  `role_id` INT(11) DEFAULT NULL COMMENT '角色id',
+  `permission_id` INT(11) DEFAULT NULL COMMENT '权限id',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `index_group_role_per_id` (`role_id`,`permission_id`) USING BTREE,
+  KEY `index_group_role_id` (`role_id`) USING BTREE,
+  KEY `index_group_per_id` (`permission_id`) USING BTREE
+) ENGINE=INNODB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8 ROW_FORMAT=COMPACT COMMENT='角色权限表';
+INSERT  INTO `sys_role_permission`(`id`,`role_id`,`permission_id`) VALUES (1,1,1),(2,1,2),(3,1,3),(4,1,4),(5,2,4);
+```
+
+
+#### 2.2 编码实现
+1. 补全`MyRealm`中授权验证逻辑
+
+``` java
+@Slf4j
+@Component("MyRealm")
+public class MyRealm extends AuthorizingRealm {
+    //...其他代码省略
+/**
+     * 获取用户权限信息，包括角色以及权限。
+     * 只有当触发检测用户权限时才会调用此方法，例如checkRole,checkPermissionJwtToken
+     */
+    @Override
+    protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
+        log.info("————权限认证 [ roles、permissions]————");
+        User user = null;
+        if (principals != null) {
+            user = (User) principals.getPrimaryPrincipal();
+        }
+        SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo();
+        if (user != null) {
+            // 用户拥有的角色，比如“admin/user”
+            String role = sysService.getRoleByRoleid(user.getRoleid());
+            simpleAuthorizationInfo.addRole(role);
+            log.info("角色为："+role);
+            // 用户拥有的权限集合，比如“role:add,user:add”
+            Set<String> permissions = sysService.getPermissionsByRoleid(user.getRoleid());
+            simpleAuthorizationInfo.addStringPermissions(permissions);
+            log.info("权限有："+permissions.toString());
+        }
+        return simpleAuthorizationInfo;
+    }
+}
+```
+
+2. `Service`中添加获取角色与权限的方法，DAO与Mapper请移步源码。
+
+``` java
+public interface SysService {
+	/**
+	 * 根据roleid查找用户角色名，自定义Realm中调用
+	 * @param roleid
+	 * @return roles
+	 */
+	String getRoleByRoleid(Integer roleid);
+
+	/**
+	 * 根据roleid查找用户权限，自定义Realm中调用
+	 * @param roleid
+	 * @return  Set<permissions>
+	 */
+	Set<String> getPermissionsByRoleid(Integer roleid);
+}
+/**
+ * 实现类
+ */
+@Service
+public class SysServiceImpl implements SysService {
+    @Override
+    public String getRoleByRoleid(Integer roleid) {
+        return sysDao.getRoleByRoleid(roleid);
+    }
+    @Override
+    public Set<String> getPermissionsByRoleid(Integer roleid) {
+        return sysDao.getPermissionsByRoleid(roleid);
+    }
+}
+```
+
+3. `Controller`中使用`@RequiresPermissions`来控制权限
+
+``` java
+@RestController
+public class UserApi {
+	/**
+	 * 获取所有用户信息
+	 * @return
+	 */
+	@RequiresPermissions("user:list")
+	@GetMapping("/user/list")
+	public ResponseVo list() {
+		return userService.loadUser();
+	}
+	/**
+	 * 用户更新资料
+	 * @param user
+	 * @return
+	 */
+	@RequiresPermissions("user:update")
+	@PostMapping("/user/update")
+	public ResponseVo update(User user, HttpServletRequest request) {
+		String token = request.getHeader("X-Token");
+		return userService.modifyUser(token, user);
+	}
+}
+```
+
+
+> 注：这里的登录认证+授权控制 在`github`源码`tag`的`V2.0`中，后续版本再加入前端动态路由控制等。
+> 源码地址: [https://github.com/chaooo/springboot-vue-shiro.git](https://github.com/chaooo/springboot-vue-shiro.git)
+> 仅下载后端认证+授权控制源码:
+> `git clone --branch V2.0 https://github.com/chaooo/springboot-vue-shiro.git`
 

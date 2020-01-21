@@ -571,6 +571,7 @@ public class ResponseVo<T> {
 > `git clone --branch V1.0 https://github.com/chaooo/springboot-vue-shiro.git`
 
 
+
 ================================================================================
 
 ## 二、权限控制
@@ -918,4 +919,19 @@ public class UserApi {
 > 源码地址: [https://github.com/chaooo/springboot-vue-shiro.git](https://github.com/chaooo/springboot-vue-shiro.git)
 > 仅下载后端认证+授权控制源码:
 > `git clone --branch V2.0 https://github.com/chaooo/springboot-vue-shiro.git`
+
+
+
+================================================================================
+
+## 二、前端的权限控制
+前两篇我们整合了`SpringBoot+Shiro+JWT+Redis`实现了登录认证，接口权限控制，接下来将要实现前端Vue的动态路由控制。
+
+### 1. 前端权限控制思路（Vue）
+前端的权限控制，不同的权限对应着不同的路由，同时菜单也需根据不同的权限，异步生成。
+先回顾下整体流程：
+![](http://cdn.chaooo.top/Java/auth-global.png)
+
+- 登录: 提交账号和密码到服务端签发`token`，拿到`token`之后存入浏览器，再携带`token`(一般放在请求头中)再去获取用户的详细信息(包括用户权限等信息)。
+- 权限验证：通过用户权限信息 构建 对应权限的路由，通过`router.addRoutes`动态挂载这些路由。
 

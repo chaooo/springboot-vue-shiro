@@ -1,6 +1,7 @@
 package top.itdn.server.service;
 
 import top.itdn.server.entity.User;
+import top.itdn.server.entity.UserVo;
 import top.itdn.server.utils.ResponseVo;
 
 import java.util.List;

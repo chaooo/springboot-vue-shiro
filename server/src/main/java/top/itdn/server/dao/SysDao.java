@@ -2,6 +2,7 @@ package top.itdn.server.dao;
 
 import org.apache.ibatis.annotations.Mapper;
 import top.itdn.server.entity.User;
+import top.itdn.server.entity.UserVo;
 
 import java.util.Set;
 
@@ -14,4 +15,8 @@ public interface SysDao {
     String getRoleByRoleid(Integer roleid);
 
     Set<String> getPermissionsByRoleid(Integer roleid);
+
+    UserVo selectVoByPrimaryKey(int userId);
+
+    Set<String> selectPermissionByRoleid(Integer roleid);
 }

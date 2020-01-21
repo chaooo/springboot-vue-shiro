@@ -1,6 +1,8 @@
 package top.itdn.server.service;
 
 import top.itdn.server.entity.User;
+import top.itdn.server.entity.UserVo;
+import top.itdn.server.utils.JwtUtil;
 import top.itdn.server.utils.ResponseVo;
 
 import java.util.Set;
@@ -27,6 +29,13 @@ public interface SysService {
 	 * @return String
 	 */
     ResponseVo<String> login(String account, String password);
+
+	/**
+	 * 获取当前用户信息，包括权限路径
+	 * @param token
+	 * @return UserVo
+	 */
+	ResponseVo<UserVo> userInfo(String token);
 
 	/**
 	 * 根据account查找用户，自定义Realm中调用

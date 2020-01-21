@@ -22,12 +22,25 @@
     where account = #{account,jdbcType=VARCHAR}
     limit 0,1
   </select>
+  <select id="selectVoByPrimaryKey" resultType="top.itdn.server.entity.UserVo">
+    select
+    <include refid="Base_Column_List" />
+    from sys_user
+    where id = #{id,jdbcType=INTEGER}
+  </select>
   <select id="getRoleByRoleid" resultType="java.lang.String">
     select role_name from sys_role
     where id = #{id,jdbcType=INTEGER}
   </select>
   <select id="getPermissionsByRoleid" resultType="java.lang.String">
     select perms from sys_permission
+    where id in (
+      select permission_id from sys_role_permission
+      where role_id = #{id,jdbcType=INTEGER}
+    )
+  </select>
+  <select id="selectPermissionByRoleid" resultType="java.lang.String">
+    select url from sys_permission
     where id in (
       select permission_id from sys_role_permission
       where role_id = #{id,jdbcType=INTEGER}

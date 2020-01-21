@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import top.itdn.server.dao.SysDao;
 import top.itdn.server.entity.User;
+import top.itdn.server.entity.UserVo;
 import top.itdn.server.service.SysService;
 import top.itdn.server.utils.JwtUtil;
 import top.itdn.server.utils.Md5Util;
@@ -138,4 +139,19 @@ public class SysServiceImpl implements SysService {
         return sysDao.getPermissionsByRoleid(roleid);
     }
 
+    /**
+     * 获取当前用户信息，包括权限路径
+     *
+     * @param token
+     * @return UserVo
+     */
+    @Override
+    public ResponseVo<UserVo> userInfo(String token) {
+        //根据id查找用户
+        int userId = JwtUtil.parseTokenUid(token);
+        UserVo userVo = sysDao.selectVoByPrimaryKey(userId);
+        Set<String> menus = sysDao.selectPermissionByRoleid(userVo.getRoleid());
+        userVo.setMenus(menus);
+        return new ResponseVo<>(0,"获取成功", userVo);
+    }
 }

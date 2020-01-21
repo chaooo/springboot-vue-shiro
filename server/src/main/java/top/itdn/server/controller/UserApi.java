@@ -2,6 +2,7 @@ package top.itdn.server.controller;
 
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import top.itdn.server.entity.User;
+import top.itdn.server.entity.UserVo;
 import top.itdn.server.service.UserService;
 import top.itdn.server.utils.ResponseVo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +57,7 @@ public class UserApi {
 		String token = request.getHeader("X-Token");
 		return userService.modifyPassword(token, password, newPassword);
 	}
+
 
 
 

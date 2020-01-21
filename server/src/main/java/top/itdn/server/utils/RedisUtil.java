@@ -1,10 +1,16 @@
 package top.itdn.server.utils;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
 /**
  * redis 工具类
  *
@@ -14,10 +20,8 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class RedisUtil {
 
-    @Autowired
+    @Resource
     private RedisTemplate<String, Object> redisTemplate;
-    @Autowired
-    private StringRedisTemplate stringRedisTemplate;
 
     /**
      * 指定缓存失效时间
@@ -135,7 +139,7 @@ public class RedisUtil {
      * 递增
      *
      * @param key 键
-     * @param by  要增加几(大于0)
+     * @param delta  要增加几(大于0)
      * @return
      */
     public long incr(String key, long delta) {
@@ -461,7 +465,6 @@ public class RedisUtil {
      *
      * @param key   键
      * @param value 值
-     * @param time  时间(秒)
      * @return
      */
     public boolean lSet(String key, Object value) {
@@ -500,7 +503,6 @@ public class RedisUtil {
      *
      * @param key   键
      * @param value 值
-     * @param time  时间(秒)
      * @return
      */
     public boolean lSet(String key, List<Object> value) {
@@ -570,4 +572,3 @@ public class RedisUtil {
         }
     }
 }
-

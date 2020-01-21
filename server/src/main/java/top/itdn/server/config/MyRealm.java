@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import top.itdn.server.entity.User;
 import top.itdn.server.service.AdminService;
 import top.itdn.server.utils.JwtUtil;
+import top.itdn.server.utils.RedisUtil;
 
 /**
  * Realm
@@ -24,10 +25,15 @@ import top.itdn.server.utils.JwtUtil;
 public class MyRealm extends AuthorizingRealm {
 
     private AdminService adminService;
+    private RedisUtil redisUtil;
 	@Autowired
 	public void setAdminService(AdminService adminService) {
 		this.adminService = adminService;
 	}
+    @Autowired
+    public void setRedisUtil(RedisUtil redisUtil) {
+        this.redisUtil = redisUtil;
+    }
 
     /**
      * 必须重写此方法，不然Shiro会报错
@@ -45,14 +51,18 @@ public class MyRealm extends AuthorizingRealm {
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken auth) throws AuthenticationException {
         log.info("————————身份认证——————————");
         String token = (String) auth.getCredentials();
-        if (null == token || !JwtUtil.isVerify(token)) {
-            throw new AuthenticationException("token无效!");
+        if (null == token) {
+            throw new AuthenticationException("token为空!");
         }
         // 解密获得username，用于和数据库进行对比
         String account = JwtUtil.parseTokenAud(token);
         User user = adminService.selectByAccount(account);
         if (null == user) {
             throw new AuthenticationException("用户不存在!");
+        }
+        // 校验token是过期
+        if (!tokenRefresh(token, user)) {
+            throw new AuthenticationException("Token已过期!");
         }
         return new SimpleAuthenticationInfo(user, token,"MyRealm");
     }
@@ -73,40 +83,36 @@ public class MyRealm extends AuthorizingRealm {
         return simpleAuthorizationInfo;
     }
 
-
-
     /**
-     * JWTToken刷新生命周期 （解决用户一直在线操作，提供Token失效问题）
-     * 1、登录成功后将用户的JWT生成的Token作为k、v存储到cache缓存里面(这时候k、v值一样)
-     * 2、当该用户再次请求时，通过JWTFilter层层校验之后会进入到doGetAuthenticationInfo进行身份验证
-     * 3、当该用户这次请求JWTToken值还在生命周期内，则会通过重新PUT的方式k、v都为Token值，
-     *      缓存中的token值生命周期时间重新计算(这时候k、v值一样)
-     * 4、当该用户这次请求jwt生成的token值已经超时，但该token对应cache中的k还是存在，
-     *      则表示该用户一直在操作只是JWT的token失效了，程序会给token对应的k映射的v值
-     *      重新生成JWTToken并覆盖v值，该缓存生命周期重新计算
-     * 5、当该用户这次请求jwt在生成的token值已经超时，并在cache中不存在对应的k，
-     *      则表示该用户账户空闲超时，返回用户信息已失效，请重新登录。
-     * 6、每次当返回为true情况下，都会给Response的Header中设置Authorization，该Authorization映射的v为cache对应的v值。
-     * 7、注：当前端接收到Response的Header中的Authorization值会存储起来，作为以后请求token使用
-     * 参考方案：https://blog.csdn.net/qq394829044/article/details/82763936
-     *
+     * JWT Token续签：
+     * 业务逻辑：登录成功后，用户在未过期时间内继续操作，续签token。
+     *         登录成功后，空闲超过过期时间，返回token已失效，重新登录。
+     * 实现逻辑：
+     *    1.登录成功后将token存储到redis里面(这时候k、v值一样都为token)，并设置过期时间为token过期时间
+     *    2.当用户请求时token值还未过期，则重新设置redis里token的过期时间。
+     *    3.当用户请求时token值已过期，但redis中还在，则JWT重新生成token并覆盖v值(这时候k、v值不一样了)，然后设置redis过期时间。
+     *    4.当用户请求时token值已过期，并且redis中也不存在，则用户空闲超时，返回token已失效，重新登录。
      */
-    /*public boolean jwtTokenRefresh(String token, String userName, String passWord) {
-        String cacheToken = String.valueOf(redisUtil.get("PREFIX_USER_TOKEN_" + token));
-        if (cacheToken != null && !cacheToken.equals("") && !cacheToken.equals("null")) {
+    public boolean tokenRefresh(String token, User user) {
+        String cacheToken = String.valueOf(redisUtil.get(token));
+        log.info("cacheToken----"+cacheToken);
+        if (cacheToken != null && cacheToken.length() != 0 && !"null".equals(cacheToken)) {
+            log.info("start----redis过期时间------"+redisUtil.getExpire(token));
             // 校验token有效性
-            if (!JwtUtil.verify(cacheToken)) {
-                String newAuthorization = JwtUtil.sign(userName, passWord);
-                redisUtil.set("PREFIX_USER_TOKEN_" + token, newAuthorization);
+            if (!JwtUtil.isVerify(cacheToken)) {
+                // 生成token
+                String newToken = JwtUtil.createToken(user);
+                // 将token存入redis
+                redisUtil.set(token, newToken);
                 // 设置超时时间
-                redisUtil.expire("PREFIX_USER_TOKEN_" + token, JwtUtil.paraseExpiresTime(token));
+                redisUtil.expire(token, JwtUtil.getExpireTime());
             } else {
-                redisUtil.set("PREFIX_USER_TOKEN_" + token, cacheToken);
                 // 设置超时时间
-                redisUtil.expire("PREFIX_USER_TOKEN_" + token, JwtUtil.paraseExpiresTime(token));
+                redisUtil.expire(token, JwtUtil.getExpireTime());
             }
+            log.info("end----redis过期时间------"+redisUtil.getExpire(token));
             return true;
         }
         return false;
-    }*/
+    }
 }

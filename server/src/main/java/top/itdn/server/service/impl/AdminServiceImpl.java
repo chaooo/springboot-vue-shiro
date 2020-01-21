@@ -7,6 +7,7 @@ import top.itdn.server.entity.User;
 import top.itdn.server.service.AdminService;
 import top.itdn.server.utils.JwtUtil;
 import top.itdn.server.utils.Md5Util;
+import top.itdn.server.utils.RedisUtil;
 import top.itdn.server.utils.ResponseVo;
 
 import java.util.Date;
@@ -21,6 +22,7 @@ import java.util.Date;
 public class AdminServiceImpl implements AdminService {
 
 	private UserDao userDao;
+    private RedisUtil redisUtil;
 	/**
 	 * 注入DAO
 	 */
@@ -28,7 +30,10 @@ public class AdminServiceImpl implements AdminService {
 	public void setUserDao(UserDao userDao) {
 		this.userDao = userDao;
 	}
-
+    @Autowired
+    public void setRedisUtil(RedisUtil redisUtil) {
+        this.redisUtil = redisUtil;
+    }
     /**
      * 用户注册(用户名，密码)
      *
@@ -59,7 +64,7 @@ public class AdminServiceImpl implements AdminService {
         //返回信息
         if(row>0) {
 			//生成token给用户
-			String token = JwtUtil.createToken(user);
+            String token = getToken(user);
             return new ResponseVo<>(0,"注册成功", token);
         }else {
             return new ResponseVo<>( -1, "注册失败");
@@ -83,11 +88,21 @@ public class AdminServiceImpl implements AdminService {
             String dbPassword = user.getPassword();
             if(md5Password.equals(dbPassword)) {
                 //生成token给用户
-                String token = JwtUtil.createToken(user);
+                String token = getToken(user);
                 return new ResponseVo<>(0,"登录成功", token);
             }
         }
         return new ResponseVo<>( -1, "登录失败");
+    }
+    private String getToken(User user){
+        // 生成token
+        String token = JwtUtil.createToken(user);
+        // 为了过期续签，将token存入redis
+        redisUtil.set(token, token);
+        // 设置超时时间
+        redisUtil.expire(token, JwtUtil.getExpireTime());
+
+        return token;
     }
 
     /**

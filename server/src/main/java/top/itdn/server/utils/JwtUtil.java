@@ -28,7 +28,7 @@ import com.auth0.jwt.interfaces.JWTVerifier;
  */
 public class JwtUtil {
 	/** 设置过期时间: 30分钟 */
-	private static final long EXPIRE_TIME = 30 * 60 * 1000;
+	private static final long EXPIRE_TIME = 20000;//30 * 60 * 1000;
 	/** 服务端的私钥secret,在任何场景都不应该流露出去 */
 	private static final String TOKEN_SECRET = "zhengchao";
 
@@ -98,12 +98,21 @@ public class JwtUtil {
 	}
 
 	/**
-	 *从token解析出过期时间
+	 *从token解析出过期日期时间
 	 * @param token
-	 * @return
+	 * @return Date
 	 */
-	public static Date paraseExpiresTime(String token){
+	public static Date paraseExpiresAt(String token){
 		DecodedJWT jwt = JWT.decode(token);
 		return  jwt.getExpiresAt();
 	}
+
+	/**
+	 * 返回设置的过期秒数
+	 * @return long 秒数
+	 */
+	public static long getExpireTime(){
+		return  EXPIRE_TIME/1000;
+	}
+
 }

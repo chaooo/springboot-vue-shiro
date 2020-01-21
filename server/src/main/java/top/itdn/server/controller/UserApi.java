@@ -2,6 +2,7 @@ package top.itdn.server.controller;
 
 import top.itdn.server.entity.User;
 import top.itdn.server.service.UserService;
+import top.itdn.server.utils.JwtUtil;
 import top.itdn.server.utils.ResponseVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -46,9 +47,12 @@ public class UserApi {
 	}
 
 	@GetMapping("/user/test")
-	public ResponseVo modifyPassword() {
-		return new ResponseVo(1, "test");
+	public ResponseVo<Long> test() {
+		return new ResponseVo(1, "test", JwtUtil.getExpireTime());
 	}
-
+	@PostMapping("/user/test2")
+	public ResponseVo<String> test2() {
+		return new ResponseVo(1, "test", "/user/test2");
+	}
 
 }

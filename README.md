@@ -1,23 +1,23 @@
-# springboot-vue-shiro
-## 基于前后端分离的shiro权限控制(一)
+# springboot-vue-shiro 基于Shiro前后端分离的认证与授权
+## 一、认证
 
 ### 1. 开始之前
-前后端分离项目中，我们一般采用的是无状态登录：服务端不保存任何客户端请求者信息，客户端需要自己携带着信息去访问服务端，并且携带的信息可以被服务端辨认。
+#### 1.1 技术选型
+选用`SpringBoot+Shiro+JWT`实现登录认证，结合`Redis`服务实现`token`的续签，前端选用`Vue`动态构造路由及更细粒度的操作权限控制。
+- 前后端分离项目中，我们一般采用的是无状态登录：服务端不保存任何客户端请求者信息，客户端需要自己携带着信息去访问服务端，并且携带的信息可以被服务端辨认。
+- 而`Shiro`默认的拦截跳转都是跳转`url`页面，拦截校验机制恰恰使用的`session`；而前后端分离后，后端并无权干涉页面跳转。
+- 因此前后端分离项目中使用`Shiro`就需要对其进行改造，我们可以在整合`Shiro`的基础上自定义登录校验，继续整合`JWT`(或者oauth2.0等)，使其成为支持服务端无状态登录，即`token`登录。
+- 在`Vue`项目中，只需要根据登录用户的权限信息动态的加载路由列表就可以动态的构造出访问菜单。<!-- more -->
 
-而shiro默认的拦截跳转都是跳转url页面，拦截校验机制恰恰使用的session；而前后端分离后，后端并无权干涉页面跳转。
-
-因此前后端分离项目中使用shiro就需要对其进行改造，我们可以在整合shiro的基础上自定义登录校验，继续整合JWT(或者oauth2.0等)，使其成为支持服务端无状态登录，即token登录。
-
-#### 1.1 整体流程：
-- 首次通过post请求将用户名与密码到login进行登入，登录成功后返回token；
-- 每次请求，客户端需通过header将token带回服务器做JWT Token的校验；
-- 服务端负责token生命周期的刷新，用户权限的校验；
+#### 1.2 整体流程
+- 首次通过`post`请求将用户名与密码到`login`进行登入，登录成功后返回`token`；
+- 每次请求，客户端需通过`header`将`token`带回服务器做`JWT Token`的校验；
+- 服务端负责`token`生命周期的刷新，用户权限的校验；
 
 ![](http://cdn.chaooo.top/Java/auth-global.png)
 
 ### 2. SpringBoot整合Shiro+JWT
-这里贴出主要逻辑，源码请移步:`git clone --branch V1.0 https://github.com/chaooo/springboot-vue-shiro.git
-`
+这里贴出主要逻辑，源码请移步文章末尾获取。
 1. 数据表
 
 ``` sql
@@ -56,7 +56,7 @@ COMMIT;
 </dependency>
 ```
 
-3. shiro配置类：构建securityManager环境，及配置shiroFilter并将jwtFilter添加进shiro的拦截器链中，放行登录注册请求。
+3. `shiro`配置类：构建`securityManager`环境，及配置`shiroFilter`并将`jwtFilter`添加进`shiro`的拦截器链中，放行登录注册请求。
 
 ``` java
 @Configuration
@@ -127,18 +127,18 @@ public class ShiroConfig {
 }
 ```
 
-4. 自定义Realm：继承AuthorizingRealm类，在其中实现登陆验证及权限获取的方法。
+4. 自定义`Realm`：继承`AuthorizingRealm`类，在其中实现登陆验证及权限获取的方法。
 
 ``` java
 @Slf4j
 @Component("MyRealm")
 public class MyRealm extends AuthorizingRealm {
-	/** 注入AdminService */
-    private AdminService adminService;
-	@Autowired
-	public void setAdminService(AdminService adminService) {
-		this.adminService = adminService;
-	}
+    /** 注入SysService */
+    private SysService sysService;
+    @Autowired
+    public void setSysService(SysService sysService) {
+        this.sysService = sysService;
+    }
     /**
      * 必须重写此方法，不然Shiro会报错
      */
@@ -159,7 +159,7 @@ public class MyRealm extends AuthorizingRealm {
         }
         // 解密获得username，用于和数据库进行对比
         String account = JwtUtil.parseTokenAud(token);
-        User user = adminService.selectByAccount(account);
+        User user = sysService.selectByAccount(account);
         if (null == user) {
             throw new AuthenticationException("用户不存在!");
         }
@@ -173,7 +173,7 @@ public class MyRealm extends AuthorizingRealm {
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         log.info("————权限认证 [ roles、permissions]————");
         String account = JwtUtil.parseTokenAud(principals.toString());
-        User user = adminService.selectByAccount(account);
+        User user = sysService.selectByAccount(account);
         SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo();
         /* 暂不编写，此处编写后，controller中可以使用@RequiresPermissions来对用户权限进行拦截 */
         return simpleAuthorizationInfo;
@@ -182,7 +182,7 @@ public class MyRealm extends AuthorizingRealm {
 
 ```
 
-5. 鉴权登录过滤器：继承BasicHttpAuthenticationFilter类,该拦截器需要拦截所有请求除(除登陆、注册等请求)，用于判断请求是否带有token，并获取token的值传递给shiro的登陆认证方法作为参数，用于获取token；
+5. 鉴权登录过滤器：继承`BasicHttpAuthenticationFilter`类,该拦截器需要拦截所有请求除(除登陆、注册等请求)，用于判断请求是否带有`token`，并获取`token`的值传递给`shiro`的登陆认证方法作为参数，用于获取`token`；
 
 ``` java
 @Slf4j
@@ -240,7 +240,7 @@ public class JwtFilter extends BasicHttpAuthenticationFilter {
 }
 ```
 
-6. JwtToken
+6. `JwtToken`
 
 ``` java
 public class JwtToken implements AuthenticationToken {
@@ -259,73 +259,73 @@ public class JwtToken implements AuthenticationToken {
 }
 ```
 
-7. JWT工具类：利用登陆信息生成token，根据token获取username，token验证等方法。
+7. `JWT`工具类：利用登陆信息生成`token`，根据`token`获取`username`，`token`验证等方法。
 
 ``` java
 public class JwtUtil {
-	/** 设置过期时间: 30分钟 */
-	private static final long EXPIRE_TIME = 30 * 60 * 1000;
-	/** 服务端的私钥secret,在任何场景都不应该流露出去 */
-	private static final String TOKEN_SECRET = "zhengchao";
-	/**
-	 * 生成签名，30分钟过期
-	 */
-	public static String createToken(User user) {
-	    try {
-	        // 设置过期时间
-	        Date date = new Date(System.currentTimeMillis() + EXPIRE_TIME);
-	        // 私钥和加密算法
-	        Algorithm algorithm = Algorithm.HMAC256(TOKEN_SECRET);
-	        // 设置头部信息
-	        Map<String, Object> header = new HashMap<>(2);
-	        header.put("typ", "JWT");
-	        header.put("alg", "HS256");
-	        // 返回token字符串
-	        return JWT.create()
-	                .withHeader(header)
-	                .withClaim("aud", user.getAccount())
-	                .withClaim("uid", user.getId())
-	                .withExpiresAt(date)
-	                .sign(algorithm);
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return null;
-	    }
-	}
-	/**
-	 * 检验token是否正确
-	 */
-	public static boolean isVerify(String token){
-	    try {
-	        Algorithm algorithm = Algorithm.HMAC256(TOKEN_SECRET);
-	        JWTVerifier verifier = JWT.require(algorithm).build();
-	        verifier.verify(token);
-	        return true;
-	    } catch (Exception e){
-	        return false;
-	    }
-	}
-	/**
-	 *从token解析出uid信息,用户ID
-	 */
-	public static int parseTokenUid(String token) {
-		DecodedJWT jwt = JWT.decode(token);
-		return jwt.getClaim("uid").asInt();
-	}
-	/**
-	 *从token解析出aud信息,用户名
-	 */
-	public static String parseTokenAud(String token) {
-		DecodedJWT jwt = JWT.decode(token);
-		return jwt.getClaim("aud").asString();
-	}
-	/**
-	 *从token解析出过期时间
-	 */
-	public static Date paraseExpiresTime(String token){
-		DecodedJWT jwt = JWT.decode(token);
-		return  jwt.getExpiresAt();
-	}
+    /** 设置过期时间: 30分钟 */
+    private static final long EXPIRE_TIME = 30 * 60 * 1000;
+    /** 服务端的私钥secret,在任何场景都不应该流露出去 */
+    private static final String TOKEN_SECRET = "zhengchao";
+    /**
+     * 生成签名，30分钟过期
+     */
+    public static String createToken(User user) {
+        try {
+            // 设置过期时间
+            Date date = new Date(System.currentTimeMillis() + EXPIRE_TIME);
+            // 私钥和加密算法
+            Algorithm algorithm = Algorithm.HMAC256(TOKEN_SECRET);
+            // 设置头部信息
+            Map<String, Object> header = new HashMap<>(2);
+            header.put("typ", "JWT");
+            header.put("alg", "HS256");
+            // 返回token字符串
+            return JWT.create()
+                    .withHeader(header)
+                    .withClaim("aud", user.getAccount())
+                    .withClaim("uid", user.getId())
+                    .withExpiresAt(date)
+                    .sign(algorithm);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    /**
+     * 检验token是否正确
+     */
+    public static boolean isVerify(String token){
+        try {
+            Algorithm algorithm = Algorithm.HMAC256(TOKEN_SECRET);
+            JWTVerifier verifier = JWT.require(algorithm).build();
+            verifier.verify(token);
+            return true;
+        } catch (Exception e){
+            return false;
+        }
+    }
+    /**
+     *从token解析出uid信息,用户ID
+     */
+    public static int parseTokenUid(String token) {
+        DecodedJWT jwt = JWT.decode(token);
+        return jwt.getClaim("uid").asInt();
+    }
+    /**
+     *从token解析出aud信息,用户名
+     */
+    public static String parseTokenAud(String token) {
+        DecodedJWT jwt = JWT.decode(token);
+        return jwt.getClaim("aud").asString();
+    }
+    /**
+     *从token解析出过期时间
+     */
+    public static Date paraseExpiresTime(String token){
+        DecodedJWT jwt = JWT.decode(token);
+        return  jwt.getExpiresAt();
+    }
 }
 ```
 
@@ -334,127 +334,126 @@ public class JwtUtil {
 ``` java
 public class Md5Util {
     /**
-	 * md5加密
-	 * @param s：待加密字符串
-	 * @return 加密后16进制字符串
-	 */
-	public static String md5(String s) {
-	    try {
-	    	//实例化MessageDigest的MD5算法对象
-	        MessageDigest md = MessageDigest.getInstance("MD5");
-	        //通过digest方法返回哈希计算后的字节数组
-	        byte[] bytes = md.digest(s.getBytes("utf-8"));
-	        //将字节数组转换为16进制字符串并返回
-	        return toHex(bytes);
-	    }
-	    catch (Exception e) {
-	        throw new RuntimeException(e);
-	    }
-	}
-	/**
-	 * 获取随即盐
-	 */
-	public static String salt(){
-		//利用UUID生成随机盐
-		UUID uuid = UUID.randomUUID();
-		//返回a2c64597-232f-4782-ab2d-9dfeb9d76932
-		String[] arr = uuid.toString().split("-");
-		return arr[0];
-	}
-	/**
-	 * 字节数组转换为16进制字符串
-	 * @param bytes数组
-	 * @return 16进制字符串
-	 */
-	private static String toHex(byte[] bytes) {
-	    final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
-	    StringBuilder ret = new StringBuilder(bytes.length * 2);
-	    for (int i=0; i<bytes.length; i++) {
-	        ret.append(HEX_DIGITS[(bytes[i] >> 4) & 0x0f]);
-	        ret.append(HEX_DIGITS[bytes[i] & 0x0f]);
-	    }
-	    return ret.toString();
-	}
+     * md5加密
+     * @param s：待加密字符串
+     * @return 加密后16进制字符串
+     */
+    public static String md5(String s) {
+        try {
+            //实例化MessageDigest的MD5算法对象
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            //通过digest方法返回哈希计算后的字节数组
+            byte[] bytes = md.digest(s.getBytes("utf-8"));
+            //将字节数组转换为16进制字符串并返回
+            return toHex(bytes);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    /**
+     * 获取随即盐
+     */
+    public static String salt(){
+        //利用UUID生成随机盐
+        UUID uuid = UUID.randomUUID();
+        //返回a2c64597-232f-4782-ab2d-9dfeb9d76932
+        String[] arr = uuid.toString().split("-");
+        return arr[0];
+    }
+    /**
+     * 字节数组转换为16进制字符串
+     * @param bytes数组
+     * @return 16进制字符串
+     */
+    private static String toHex(byte[] bytes) {
+        final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
+        StringBuilder ret = new StringBuilder(bytes.length * 2);
+        for (int i=0; i<bytes.length; i++) {
+            ret.append(HEX_DIGITS[(bytes[i] >> 4) & 0x0f]);
+            ret.append(HEX_DIGITS[bytes[i] & 0x0f]);
+        }
+        return ret.toString();
+    }
 }
 ```
 
 ### 3. 注册与登录主要逻辑
-这里只贴出主要逻辑，DAO和Mapper映射可查看源码：`git clone --branch V1.0 https://github.com/chaooo/springboot-vue-shiro.git
-`
-1. Controller
+这里只贴出主要逻辑，`DAO`和`Mapper`映射可查看源码，源码请移步文章末尾获取。
+1. 登录`Controller`
 
 ``` java
 @RestController
-public class AdminApi {
-	/**
-	 * 注入服务类
-	 */
-    private AdminService adminService;
-	@Autowired
-	public void setAdminService(AdminService adminService) {
-		this.adminService = adminService;
-	}
-	/**
-	 * 注册(用户名，密码)
-	 * @param account
-	 * @param password
-	 * @return
-	 */
-	@PostMapping("/register")
-	public ResponseVo<String> register(String account, String password) {
-		return adminService.register(account, password);
-	}
-	/**
-	 * 登录(用户名，密码)
-	 * @param account
-	 * @param password
-	 * @return
-	 */
-	@PostMapping("/login")
-	public ResponseVo<String> login(String account, String password) {
-		return adminService.login(account, password);
-	}
-	/**
-	 * 处理非法请求
-	 */
-	@GetMapping("/unauthorized")
-	public ResponseVo unauthorized(HttpServletRequest request) {
-		return new ResponseVo(-1, "Token失效请重新登录!");
-	}
+public class SysApi {
+    /**
+     * 注入服务类
+     */
+    private SysService sysService;
+    @Autowired
+    public void setSysService(SysService sysService) {
+        this.sysService = sysService;
+    }
+    /**
+     * 注册(用户名，密码)
+     * @param account
+     * @param password
+     * @return
+     */
+    @PostMapping("/register")
+    public ResponseVo<String> register(String account, String password) {
+        return sysService.register(account, password);
+    }
+    /**
+     * 登录(用户名，密码)
+     * @param account
+     * @param password
+     * @return
+     */
+    @PostMapping("/login")
+    public ResponseVo<String> login(String account, String password) {
+        return sysService.login(account, password);
+    }
+    /**
+     * 处理非法请求
+     */
+    @GetMapping("/unauthorized")
+    public ResponseVo unauthorized(HttpServletRequest request) {
+        return new ResponseVo(-1, "Token失效请重新登录!");
+    }
 }
 ```
 
 2. Service
 
 ``` java
-public interface AdminService {
-	/**
-	 * 注册(用户名，密码)
-	 */
+public interface SysService {
+    /**
+     * 注册(用户名，密码)
+     */
     ResponseVo<String> register(String account, String password);
-	/**
-	 * 登录(用户名，密码)
-	 */
+    /**
+     * 登录(用户名，密码)
+     */
     ResponseVo<String> login(String account, String password);
-	/**
-	 * 根据account查找用户，自定义Realm中调用
-	 */
-	User selectByAccount(String account);
+    /**
+     * 根据account查找用户，自定义Realm中调用
+     */
+    User selectByAccount(String account);
 }
 /**
  * 实现类
  */
 @Service
-public class AdminServiceImpl implements AdminService {
+public class SysServiceImpl implements SysService {
 
-	private UserDao userDao;
-	/**
-	 * 注入DAO
-	 */
-	@Autowired
-	public void setUserDao(UserDao userDao) {
-		this.userDao = userDao;
-	}
+    private UserDao userDao;
+    /**
+     * 注入DAO
+     */
+    @Autowired
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
+    }
     /**
      * 用户注册(用户名，密码)
      *
@@ -484,8 +483,8 @@ public class AdminServiceImpl implements AdminService {
         int row = userDao.insertSelective(user);
         //返回信息
         if(row>0) {
-			//生成token给用户
-			String token = JwtUtil.createToken(user);
+            //生成token给用户
+            String token = JwtUtil.createToken(user);
             return new ResponseVo<>(0,"注册成功", token);
         }else {
             return new ResponseVo<>( -1, "注册失败");
@@ -568,14 +567,214 @@ public class ResponseVo<T> {
 }
 ```
 
-> 注：这里的登录认证逻辑在源码的V1.0中，后续版本再加入Token续签和shiro前后端权限管理等。下载认证逻辑源码`git clone --branch V1.0 https://github.com/chaooo/springboot-vue-shiro.git
-`
+> 注：这里的登录认证逻辑在`github`源码`tag`的`V1.0`中，后续版本再加入`Token`续签和`shiro`前后端权限管理等。
+> 源码地址: [https://github.com/chaooo/springboot-vue-shiro.git](https://github.com/chaooo/springboot-vue-shiro.git)
+> 仅下载认证逻辑源码:
+> `git clone --branch V1.0 https://github.com/chaooo/springboot-vue-shiro.git`
 
 
-==========================================================
+================================================================================
 
-## 基于前后端分离的shiro权限控制(二)
-
+## 二、权限控制
 前面我们整合了SpringBoot+Shiro+JWT实现了登录认证，但还没有实现权限控制，这是接下来的工作。
 
-### JWT的Token续签
+### 1. JWT的Token续签
+#### 1.1 续签思路
+1. 业务逻辑：
+    + 登录成功后，用户在未过期时间内继续操作，续签token。
+    + 登录成功后，空闲超过过期时间，返回token已失效，重新登录。
+2. 实现逻辑：
+    1. 登录成功后将token存储到redis里面(这时候k、v值一样都为token)，并设置过期时间为token过期时间
+    2. 当用户请求时token值还未过期，则重新设置redis里token的过期时间。
+    3. 当用户请求时token值已过期，但redis中还在，则JWT重新生成token并覆盖v值(这时候k、v值不一样了)，然后设置redis过期时间。
+    4. 当用户请求时token值已过期，并且redis中也不存在，则用户空闲超时，返回token已失效，重新登录。
+
+#### 1.2 编码实现
+1. `pom.xml`引入`Redis`
+
+``` xml
+<!-- Redis -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-redis</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-pool2</artifactId>
+    <version>2.8.0</version>
+</dependency>
+```
+
+2. 编写`Redis`工具类
+
+``` java
+@Component
+public class RedisUtil {
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
+    /**
+     * 指定缓存失效时间
+     * @param key  键
+     * @param time 时间(秒)
+     */
+    public boolean expire(String key, long time) {
+        try {
+            if (time > 0) {
+                redisTemplate.expire(key, time, TimeUnit.SECONDS);
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    /**
+     * 根据key 获取过期时间
+     * @param key 键 不能为null
+     * @return 时间(秒) 返回0代表为永久有效
+     */
+    public long getExpire(String key) {
+        return redisTemplate.getExpire(key, TimeUnit.SECONDS);
+    }
+    /**
+     * 普通缓存放入并设置时间
+     * @param key   键
+     * @param value 值
+     * @param time  时间(秒) time要大于0 如果time小于等于0 将设置无限期
+     * @return true成功 false 失败
+     */
+    public boolean set(String key, Object value, long time) {
+        try {
+            if (time > 0) {
+                redisTemplate.opsForValue().set(key, value, time, TimeUnit.SECONDS);
+            } else {
+                set(key, value);
+            }
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+}
+```
+
+3. JwtUtil中增加返回过期秒数的方法
+
+``` java
+public class JwtUtil {
+    /** 设置过期时间: 30分钟 */
+    private static final long EXPIRE_TIME = 30 * 60 * 1000;
+    //... 其他代码省略
+    /**
+     * 返回设置的过期秒数
+     * @return long 秒数
+     */
+    public static long getExpireTime(){
+        return  EXPIRE_TIME/1000;
+    }
+}
+```
+
+4. 改写登录逻辑，生成`token`后存入`Redis`
+
+``` java
+@Service
+public class SysServiceImpl implements SysService {
+    private String getToken(User user){
+        // 生成token
+        String token = JwtUtil.createToken(user);
+        // 为了过期续签，将token存入redis，并设置超时时间
+        redisUtil.set(token, token, JwtUtil.getExpireTime());
+        return token;
+    }
+     * 用户登录(用户名，密码)
+     *
+     * @param account 用户名
+     * @param password 密码
+     * @return token
+     */
+    @Override
+    public ResponseVo<String> login(String account, String password) {
+        //处理比对密码
+        User user = userDao.selectByAccount(account);
+        if(user!=null) {
+            String  salt = user.getSalt();
+            String md5Password = Md5Util.md5(password+salt);
+            String dbPassword = user.getPassword();
+            if(md5Password.equals(dbPassword)) {
+                //生成token给用户，并存入redis
+                String token = getToken(user);
+                return new ResponseVo<>(0,"登录成功", token);
+            }
+        }
+        return new ResponseVo<>( -1, "登录失败");
+    }
+}
+```
+
+5. 改写`MyRealm`，加入`token`续签逻辑
+
+``` java
+@Slf4j
+@Component("MyRealm")
+public class MyRealm extends AuthorizingRealm {
+    /**
+     * JWT Token续签：
+     * 业务逻辑：登录成功后，用户在未过期时间内继续操作，续签token。
+     *         登录成功后，空闲超过过期时间，返回token已失效，重新登录。
+     * 实现逻辑：
+     *    1.登录成功后将token存储到redis里面(这时候k、v值一样都为token)，并设置过期时间为token过期时间
+     *    2.当用户请求时token值还未过期，则重新设置redis里token的过期时间。
+     *    3.当用户请求时token值已过期，但redis中还在，则JWT重新生成token并覆盖v值(这时候k、v值不一样了)，然后设置redis过期时间。
+     *    4.当用户请求时token值已过期，并且redis中也不存在，则用户空闲超时，返回token已失效，重新登录。
+     */
+    public boolean tokenRefresh(String token, User user) {
+        String cacheToken = String.valueOf(redisUtil.get(token));
+        // 过期后会得到"null"值，所以需判断字符串"null"
+        if (cacheToken != null && cacheToken.length() != 0 && !"null".equals(cacheToken)) {
+            // 校验token有效性
+            if (!JwtUtil.isVerify(cacheToken)) {
+                // 生成token
+                String newToken = JwtUtil.createToken(user);
+                // 将token存入redis,并设置超时时间
+                redisUtil.set(token, newToken, JwtUtil.getExpireTime());
+            } else {
+                // 重新设置超时时间
+                redisUtil.expire(token, JwtUtil.getExpireTime());
+            }
+            log.info("打印存入redis的过期时间："+redisUtil.getExpire(token));
+            return true;
+        }
+        return false;
+    }
+    /**
+     * 重写认证逻辑
+     */
+    @Override
+    protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken auth) throws AuthenticationException {
+        log.info("————————身份认证——————————");
+        String token = (String) auth.getCredentials();
+        if (null == token) {
+            throw new AuthenticationException("token为空!");
+        }
+        // 解密获得username，用于和数据库进行对比
+        String account = JwtUtil.parseTokenAud(token);
+        User user = sysService.selectByAccount(account);
+        if (null == user) {
+            throw new AuthenticationException("用户不存在!");
+        }
+        // 校验token是否过期
+        if (!tokenRefresh(token, user)) {
+            throw new AuthenticationException("Token已过期!");
+        }
+        return new SimpleAuthenticationInfo(user, token,"MyRealm");
+    }
+}
+```
+
+到此，JWT的Token续签的功能已经全部实现了。
+
+
+### 2. 权限管理
+

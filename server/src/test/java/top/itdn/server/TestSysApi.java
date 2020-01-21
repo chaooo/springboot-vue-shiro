@@ -14,10 +14,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import top.itdn.server.controller.AdminApi;
+import top.itdn.server.controller.SysApi;
 import top.itdn.server.utils.ResponseVo;
-
-import java.util.Date;
 
 /**
  * @author : Charles
@@ -26,10 +24,10 @@ import java.util.Date;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes=ServerApplication.class)
-public class TestAdminApi {
+public class TestSysApi {
 
 	@Autowired
-	private AdminApi controller;
+	private SysApi controller;
 /**
 	 * 测试SpringMVC处理流程 主要逻辑
 	 * @param uri

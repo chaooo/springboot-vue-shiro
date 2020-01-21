@@ -3,6 +3,8 @@ package top.itdn.server.service;
 import top.itdn.server.entity.User;
 import top.itdn.server.utils.ResponseVo;
 
+import java.util.List;
+
 /**
  * Description
  *
@@ -10,6 +12,11 @@ import top.itdn.server.utils.ResponseVo;
  * @date : 2020/1/17
  */
 public interface UserService {
+	/**
+	 * 查找所有用户
+	 * @return List
+	 */
+	ResponseVo<List<User>> loadUser();
 
 	/**
 	 * 根据id查找用户
@@ -17,13 +24,6 @@ public interface UserService {
 	 * @return
 	 */
     ResponseVo<User> loadUser(int id);
-
-	/**
-	 * 根据account查找用户
-	 * @param account
-	 * @return
-	 */
-    ResponseVo<User> loadUser(String account);
 
 	/**
 	 * 用户更新资料

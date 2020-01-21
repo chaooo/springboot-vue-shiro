@@ -2,6 +2,10 @@ package top.itdn.server.dao;
 
 import top.itdn.server.entity.User;
 import org.apache.ibatis.annotations.Mapper;
+import top.itdn.server.utils.ResponseVo;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * Description
@@ -23,5 +27,5 @@ public interface UserDao {
 
     int updateByPrimaryKey(User record);
 
-    User selectByAccount(String account);
+    List<User> selectAll();
 }

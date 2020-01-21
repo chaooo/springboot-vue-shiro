@@ -7,8 +7,10 @@ import top.itdn.server.utils.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,12 +27,23 @@ public class UserServiceImpl implements UserService {
 	/**
 	 * 注入DAO
 	 */
-	@Autowired
+	@Resource
 	public void setUserDao(UserDao userDao) {
 		this.userDao = userDao;
 	}
 
-	/**
+    /**
+     * 查找所有用户
+     *
+     * @return List
+     */
+    @Override
+    public ResponseVo<List<User>> loadUser() {
+        List<User> userList = userDao.selectAll();
+        return new ResponseVo<>(0, "sucess", userList);
+    }
+
+    /**
      * 根据id查找用户
      * @param id 用户ID
      * @return user
@@ -44,32 +57,11 @@ public class UserServiceImpl implements UserService {
             return new ResponseVo<>(-1, "查无此人");
         }
     }
-
-	/**
-     * 根据account查找用户
-     * @param account 用户名
-     * @return user
-     */
-    @Override
-    public ResponseVo<User> loadUser(String account) {
-        User user = userDao.selectByAccount(account);
-        if(user!=null) {
-            return new ResponseVo<>(0, "sucess", user);
-        }else {
-            return new ResponseVo<>(-1, "查无此人");
-        }
-    }
-
     /**
      * 用户更新资料
      */
     @Override
     public ResponseVo modifyUser(String token, User user) {
-        //先检查token，若Token令牌错误，返回
-        boolean ok = JwtUtil.isVerify(token);
-        if(!ok) {
-            return new ResponseVo(-1,"Token无效");
-        }
         //根据token得到用户id,并查出用户数据
         int user_id = JwtUtil.parseTokenUid(token);
         user.setId(user_id);
@@ -85,11 +77,6 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public ResponseVo modifyPassword(String token, String password, String newPassword) {
-        //先检查token，若Token令牌错误，返回
-        boolean ok = JwtUtil.isVerify(token);
-        if(!ok) {
-            return new ResponseVo(-1,"Token无效");
-        }
         //根据id查找用户
         int userId = JwtUtil.parseTokenUid(token);
         User user = userDao.selectByPrimaryKey(userId);

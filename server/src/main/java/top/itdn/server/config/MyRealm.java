@@ -10,9 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import top.itdn.server.entity.User;
-import top.itdn.server.service.AdminService;
+import top.itdn.server.service.SysService;
 import top.itdn.server.utils.JwtUtil;
 import top.itdn.server.utils.RedisUtil;
+
+import java.util.Set;
 
 /**
  * Realm
@@ -24,11 +26,11 @@ import top.itdn.server.utils.RedisUtil;
 @Component("MyRealm")
 public class MyRealm extends AuthorizingRealm {
 
-    private AdminService adminService;
+    private SysService sysService;
     private RedisUtil redisUtil;
 	@Autowired
-	public void setAdminService(AdminService adminService) {
-		this.adminService = adminService;
+	public void setSysService(SysService sysService) {
+		this.sysService = sysService;
 	}
     @Autowired
     public void setRedisUtil(RedisUtil redisUtil) {
@@ -56,7 +58,7 @@ public class MyRealm extends AuthorizingRealm {
         }
         // 解密获得username，用于和数据库进行对比
         String account = JwtUtil.parseTokenAud(token);
-        User user = adminService.selectByAccount(account);
+        User user = sysService.selectByAccount(account);
         if (null == user) {
             throw new AuthenticationException("用户不存在!");
         }
@@ -74,12 +76,21 @@ public class MyRealm extends AuthorizingRealm {
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         log.info("————权限认证 [ roles、permissions]————");
-        String account = JwtUtil.parseTokenAud(principals.toString());
-        User user = adminService.selectByAccount(account);
+        User user = null;
+        if (principals != null) {
+            user = (User) principals.getPrimaryPrincipal();
+        }
         SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo();
-        /* simpleAuthorizationInfo.addRole(user.getRole());
-        Set<String> permission = new HashSet<>(Arrays.asList(user.getPermission().split(",")));
-        simpleAuthorizationInfo.addStringPermissions(permission); */
+        if (user != null) {
+            // 用户拥有的角色，比如“admin/user”
+            String role = sysService.getRoleByRoleid(user.getRoleid());
+            simpleAuthorizationInfo.addRole(role);
+            log.info("角色为："+role);
+            // 用户拥有的权限集合，比如“role:add,user:add”
+            Set<String> permissions = sysService.getPermissionsByRoleid(user.getRoleid());
+            simpleAuthorizationInfo.addStringPermissions(permissions);
+            log.info("权限有："+permissions.toString());
+        }
         return simpleAuthorizationInfo;
     }
 
@@ -107,7 +118,7 @@ public class MyRealm extends AuthorizingRealm {
                 // 重新设置超时时间
                 redisUtil.expire(token, JwtUtil.getExpireTime());
             }
-            log.info("打印存入redis的过期时间："+redisUtil.getExpire(token));
+            log.info("存入redis的过期时间："+redisUtil.getExpire(token));
             return true;
         }
         return false;

@@ -13,7 +13,7 @@
     <result column="deleteStatus" jdbcType="VARCHAR" property="deletestatus" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, `account`, `PASSWORD`, salt, nickname, roleId, createTime, updateTime, deleteStatus
+    id, account, `PASSWORD`, salt, nickname, roleId, createTime, updateTime, deleteStatus
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
@@ -21,30 +21,28 @@
     from sys_user
     where id = #{id,jdbcType=INTEGER}
   </select>
-  <select id="selectByAccount" resultType="top.itdn.server.entity.User">
+  <select id="selectAll" resultType="top.itdn.server.entity.User">
     select
     <include refid="Base_Column_List" />
     from sys_user
-    where account = #{account,jdbcType=VARCHAR}
-    limit 0,1
   </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from sys_user
     where id = #{id,jdbcType=INTEGER}
   </delete>
   <insert id="insert" keyColumn="id" keyProperty="id" parameterType="top.itdn.server.entity.User" useGeneratedKeys="true">
-    insert into sys_user (`account`, `PASSWORD`, salt,
-      nickname, roleId, createTime,
-      updateTime, deleteStatus)
+    insert into sys_user (account, `PASSWORD`, salt,
+                          nickname, roleId, createTime,
+                          updateTime, deleteStatus)
     values (#{account,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, #{salt,jdbcType=VARCHAR},
-      #{nickname,jdbcType=VARCHAR}, #{roleid,jdbcType=INTEGER}, #{createtime,jdbcType=DATE},
-      #{updatetime,jdbcType=DATE}, #{deletestatus,jdbcType=VARCHAR})
+            #{nickname,jdbcType=VARCHAR}, #{roleid,jdbcType=INTEGER}, #{createtime,jdbcType=DATE},
+            #{updatetime,jdbcType=DATE}, #{deletestatus,jdbcType=VARCHAR})
   </insert>
   <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="top.itdn.server.entity.User" useGeneratedKeys="true">
     insert into sys_user
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="account != null">
-        `account`,
+        account,
       </if>
       <if test="password != null">
         `PASSWORD`,
@@ -99,7 +97,7 @@
     update sys_user
     <set>
       <if test="account != null">
-        `account` = #{account,jdbcType=VARCHAR},
+        account = #{account,jdbcType=VARCHAR},
       </if>
       <if test="password != null">
         `PASSWORD` = #{password,jdbcType=VARCHAR},
@@ -127,14 +125,14 @@
   </update>
   <update id="updateByPrimaryKey" parameterType="top.itdn.server.entity.User">
     update sys_user
-    set `account` = #{account,jdbcType=VARCHAR},
-      `PASSWORD` = #{password,jdbcType=VARCHAR},
-      salt = #{salt,jdbcType=VARCHAR},
-      nickname = #{nickname,jdbcType=VARCHAR},
-      roleId = #{roleid,jdbcType=INTEGER},
-      createTime = #{createtime,jdbcType=DATE},
-      updateTime = #{updatetime,jdbcType=DATE},
-      deleteStatus = #{deletestatus,jdbcType=VARCHAR}
+    set account = #{account,jdbcType=VARCHAR},
+        `PASSWORD` = #{password,jdbcType=VARCHAR},
+        salt = #{salt,jdbcType=VARCHAR},
+        nickname = #{nickname,jdbcType=VARCHAR},
+        roleId = #{roleid,jdbcType=INTEGER},
+        createTime = #{createtime,jdbcType=DATE},
+        updateTime = #{updatetime,jdbcType=DATE},
+        deleteStatus = #{deletestatus,jdbcType=VARCHAR}
     where id = #{id,jdbcType=INTEGER}
   </update>
 </mapper>

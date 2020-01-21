@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.itdn.server.dao.SysDao">
+  <resultMap id="BaseResultMap" type="top.itdn.server.entity.User">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="account" jdbcType="VARCHAR" property="account" />
+    <result column="PASSWORD" jdbcType="VARCHAR" property="password" />
+    <result column="salt" jdbcType="VARCHAR" property="salt" />
+    <result column="nickname" jdbcType="VARCHAR" property="nickname" />
+    <result column="roleId" jdbcType="INTEGER" property="roleid" />
+    <result column="createTime" jdbcType="DATE" property="createtime" />
+    <result column="updateTime" jdbcType="DATE" property="updatetime" />
+    <result column="deleteStatus" jdbcType="VARCHAR" property="deletestatus" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, `account`, `PASSWORD`, salt, nickname, roleId, createTime, updateTime, deleteStatus
+  </sql>
+  <select id="selectByAccount" resultType="top.itdn.server.entity.User">
+    select
+    <include refid="Base_Column_List" />
+    from sys_user
+    where account = #{account,jdbcType=VARCHAR}
+    limit 0,1
+  </select>
+  <select id="getRoleByRoleid" resultType="java.lang.String">
+    select role_name from sys_role
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="getPermissionsByRoleid" resultType="java.lang.String">
+    select perms from sys_permission
+    where id in (
+      select permission_id from sys_role_permission
+      where role_id = #{id,jdbcType=INTEGER}
+    )
+  </select>
+  <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="top.itdn.server.entity.User" useGeneratedKeys="true">
+    insert into sys_user
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="account != null">
+        `account`,
+      </if>
+      <if test="password != null">
+        `PASSWORD`,
+      </if>
+      <if test="salt != null">
+        salt,
+      </if>
+      <if test="nickname != null">
+        nickname,
+      </if>
+      <if test="roleid != null">
+        roleId,
+      </if>
+      <if test="createtime != null">
+        createTime,
+      </if>
+      <if test="updatetime != null">
+        updateTime,
+      </if>
+      <if test="deletestatus != null">
+        deleteStatus,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="account != null">
+        #{account,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null">
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="salt != null">
+        #{salt,jdbcType=VARCHAR},
+      </if>
+      <if test="nickname != null">
+        #{nickname,jdbcType=VARCHAR},
+      </if>
+      <if test="roleid != null">
+        #{roleid,jdbcType=INTEGER},
+      </if>
+      <if test="createtime != null">
+        #{createtime,jdbcType=DATE},
+      </if>
+      <if test="updatetime != null">
+        #{updatetime,jdbcType=DATE},
+      </if>
+      <if test="deletestatus != null">
+        #{deletestatus,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+</mapper>

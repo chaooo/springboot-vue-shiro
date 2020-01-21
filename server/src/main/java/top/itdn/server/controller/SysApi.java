@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
-import top.itdn.server.service.AdminService;
+import top.itdn.server.service.SysService;
 import top.itdn.server.utils.ResponseVo;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,14 +16,14 @@ import javax.servlet.http.HttpServletRequest;
  * @date : 2020/1/20
  */
 @RestController
-public class AdminApi {
+public class SysApi {
 	/**
 	 * 注入服务类
 	 */
-    private AdminService adminService;
+    private SysService sysService;
 	@Autowired
-	public void setAdminService(AdminService adminService) {
-		this.adminService = adminService;
+	public void setSysService(SysService sysService) {
+		this.sysService = sysService;
 	}
 
 	/**
@@ -34,7 +34,7 @@ public class AdminApi {
 	 */
 	@PostMapping("/register")
 	public ResponseVo<String> register(String account, String password) {
-		return adminService.register(account, password);
+		return sysService.register(account, password);
 	}
 
 	/**
@@ -45,14 +45,14 @@ public class AdminApi {
 	 */
 	@PostMapping("/login")
 	public ResponseVo<String> login(String account, String password) {
-		return adminService.login(account, password);
+		return sysService.login(account, password);
 	}
 
 	/**
 	 * 处理非法请求
 	 */
 	@GetMapping("/unauthorized")
-	public ResponseVo unauthorized(HttpServletRequest request) {
+	public ResponseVo unauthorized() {
 		return new ResponseVo(-1, "Token失效请重新登录!");
 	}
 }

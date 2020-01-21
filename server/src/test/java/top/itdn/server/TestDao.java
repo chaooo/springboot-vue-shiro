@@ -7,10 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import javax.annotation.Resource;
+
 @SpringBootTest
 class TestDao {
 
-	@Autowired
+	@Resource
 	private UserDao userDao;
 
 	@Test
@@ -18,13 +20,7 @@ class TestDao {
 		System.out.println("--------test1----------");
 	}
 
-	@Test
-	public void test2() {
-		User user = userDao.selectByAccount("admin");
-		System.out.println(user.getAccount());
-		//Assert.assertNotNull(user);//Assert已过时
-		TestCase.assertNotNull(user);
-	}
+
 
 	@Test
 	public void test3() {

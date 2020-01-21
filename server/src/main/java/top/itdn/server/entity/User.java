@@ -1,5 +1,6 @@
 package top.itdn.server.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -26,11 +27,13 @@ public class User implements Serializable {
     /**
      * 用户密码
      */
+    @JsonIgnore
     private String password;
 
     /**
      * 随机盐
      */
+    @JsonIgnore
     private String salt;
 
     /**

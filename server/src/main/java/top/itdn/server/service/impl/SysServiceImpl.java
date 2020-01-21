@@ -2,15 +2,17 @@ package top.itdn.server.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import top.itdn.server.dao.UserDao;
+import top.itdn.server.dao.SysDao;
 import top.itdn.server.entity.User;
-import top.itdn.server.service.AdminService;
+import top.itdn.server.service.SysService;
 import top.itdn.server.utils.JwtUtil;
 import top.itdn.server.utils.Md5Util;
 import top.itdn.server.utils.RedisUtil;
 import top.itdn.server.utils.ResponseVo;
 
+import javax.annotation.Resource;
 import java.util.Date;
+import java.util.Set;
 
 /**
  * Description
@@ -19,16 +21,16 @@ import java.util.Date;
  * @date : 2020/1/20
  */
 @Service
-public class AdminServiceImpl implements AdminService {
+public class SysServiceImpl implements SysService {
 
-	private UserDao userDao;
+	private SysDao sysDao;
     private RedisUtil redisUtil;
 	/**
 	 * 注入DAO
 	 */
-	@Autowired
-	public void setUserDao(UserDao userDao) {
-		this.userDao = userDao;
+    @Resource
+	public void setSysDao(SysDao sysDao) {
+		this.sysDao = sysDao;
 	}
     @Autowired
     public void setRedisUtil(RedisUtil redisUtil) {
@@ -44,7 +46,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseVo<String> register(String account, String password) {
         //检查用户名是否被占用
-        User user = userDao.selectByAccount(account);
+        User user = sysDao.selectByAccount(account);
         if(user!=null) {
             return new ResponseVo<>( -1, "用户名被占用");
         }
@@ -60,7 +62,7 @@ public class AdminServiceImpl implements AdminService {
         //设置注册时间
         user.setCreatetime(new Date());
         //添加到数据库
-        int row = userDao.insertSelective(user);
+        int row = sysDao.insertSelective(user);
         //返回信息
         if(row>0) {
 			//生成token给用户
@@ -81,7 +83,7 @@ public class AdminServiceImpl implements AdminService {
     @Override
     public ResponseVo<String> login(String account, String password) {
         //处理比对密码
-        User user = userDao.selectByAccount(account);
+        User user = sysDao.selectByAccount(account);
         if(user!=null) {
             String  salt = user.getSalt();
             String md5Password = Md5Util.md5(password+salt);
@@ -104,14 +106,36 @@ public class AdminServiceImpl implements AdminService {
     }
 
     /**
-     * 根据account查找用户
+     * 根据account查找用户，自定义Realm中调用
      *
      * @param account
      * @return User
      */
     @Override
     public User selectByAccount(String account) {
-        return userDao.selectByAccount(account);
+        return sysDao.selectByAccount(account);
+    }
+
+    /**
+     * 根据roleid查找用户角色名，自定义Realm中调用
+     *
+     * @param roleid
+     * @return roles
+     */
+    @Override
+    public String getRoleByRoleid(Integer roleid) {
+        return sysDao.getRoleByRoleid(roleid);
+    }
+
+    /**
+     * 根据roleid查找用户权限，自定义Realm中调用
+     *
+     * @param roleid
+     * @return Set<permissions>
+     */
+    @Override
+    public Set<String> getPermissionsByRoleid(Integer roleid) {
+        return sysDao.getPermissionsByRoleid(roleid);
     }
 
 }

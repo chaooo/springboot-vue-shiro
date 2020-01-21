@@ -24,6 +24,6 @@ spring:
 
 #mybatis
 mybatis:
-  mapper-locations: classpath:mappers/*Mapper.xml
+  mapper-locations: classpath:mappers/*Dao.xml
   type-aliases-package: top.itdn.server.entity
 

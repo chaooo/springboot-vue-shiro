@@ -97,10 +97,8 @@ public class AdminServiceImpl implements AdminService {
     private String getToken(User user){
         // 生成token
         String token = JwtUtil.createToken(user);
-        // 为了过期续签，将token存入redis
-        redisUtil.set(token, token);
-        // 设置超时时间
-        redisUtil.expire(token, JwtUtil.getExpireTime());
+        // 为了过期续签，将token存入redis，并设置超时时间
+        redisUtil.set(token, token, JwtUtil.getExpireTime());
 
         return token;
     }

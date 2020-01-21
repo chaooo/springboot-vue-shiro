@@ -28,7 +28,7 @@ import com.auth0.jwt.interfaces.JWTVerifier;
  */
 public class JwtUtil {
 	/** 设置过期时间: 30分钟 */
-	private static final long EXPIRE_TIME = 20000;//30 * 60 * 1000;
+	private static final long EXPIRE_TIME = 30 * 60 * 1000;
 	/** 服务端的私钥secret,在任何场景都不应该流露出去 */
 	private static final String TOKEN_SECRET = "zhengchao";
 

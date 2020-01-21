@@ -60,7 +60,7 @@ public class MyRealm extends AuthorizingRealm {
         if (null == user) {
             throw new AuthenticationException("用户不存在!");
         }
-        // 校验token是过期
+        // 校验token是否过期
         if (!tokenRefresh(token, user)) {
             throw new AuthenticationException("Token已过期!");
         }
@@ -95,22 +95,19 @@ public class MyRealm extends AuthorizingRealm {
      */
     public boolean tokenRefresh(String token, User user) {
         String cacheToken = String.valueOf(redisUtil.get(token));
-        log.info("cacheToken----"+cacheToken);
+        // 过期后会得到"null"值，所以需判断字符串"null"
         if (cacheToken != null && cacheToken.length() != 0 && !"null".equals(cacheToken)) {
-            log.info("start----redis过期时间------"+redisUtil.getExpire(token));
             // 校验token有效性
             if (!JwtUtil.isVerify(cacheToken)) {
                 // 生成token
                 String newToken = JwtUtil.createToken(user);
-                // 将token存入redis
-                redisUtil.set(token, newToken);
-                // 设置超时时间
-                redisUtil.expire(token, JwtUtil.getExpireTime());
+                // 将token存入redis,并设置超时时间
+                redisUtil.set(token, newToken, JwtUtil.getExpireTime());
             } else {
-                // 设置超时时间
+                // 重新设置超时时间
                 redisUtil.expire(token, JwtUtil.getExpireTime());
             }
-            log.info("end----redis过期时间------"+redisUtil.getExpire(token));
+            log.info("打印存入redis的过期时间："+redisUtil.getExpire(token));
             return true;
         }
         return false;

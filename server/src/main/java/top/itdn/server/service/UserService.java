@@ -14,17 +14,17 @@ import java.util.List;
  */
 public interface UserService {
 	/**
-	 * 查找所有用户
-	 * @return List
+	 * 获取当前用户信息，包括权限路径
+	 * @param token
+	 * @return UserVo
 	 */
-	ResponseVo<List<User>> loadUser();
+	ResponseVo<UserVo> userInfo(String token);
 
 	/**
-	 * 根据id查找用户
-	 * @param id
-	 * @return
+	 * 获取用户列表
+	 * @return List<UserVo>
 	 */
-    ResponseVo<User> loadUser(int id);
+	ResponseVo<List<UserVo>> userList();
 
 	/**
 	 * 用户更新资料

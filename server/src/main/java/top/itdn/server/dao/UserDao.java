@@ -3,7 +3,6 @@ package top.itdn.server.dao;
 import top.itdn.server.entity.User;
 import org.apache.ibatis.annotations.Mapper;
 import top.itdn.server.entity.UserVo;
-import top.itdn.server.utils.ResponseVo;
 
 import java.util.List;
 import java.util.Set;
@@ -28,5 +27,11 @@ public interface UserDao {
 
     int updateByPrimaryKey(User record);
 
-    List<User> selectAll();
+    UserVo selectVoByPrimaryKey(Integer id);
+
+    List<UserVo> selectAll();
+
+    Set<String> selectPermissionByRoleid(Integer roleid);
+
+    Set<String> selectRolesByRoleid(Integer id);
 }

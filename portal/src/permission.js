@@ -1,4 +1,4 @@
-import router from './router'
+import router, { constantRoutes } from './router'
 import store from './store'
 import { Message } from 'element-ui'
 import NProgress from 'nprogress' // progress bar
@@ -8,7 +8,7 @@ import getPageTitle from '@/utils/get-page-title'
 
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
-const whiteList = ['/login'] // no redirect whitelist
+const whiteList = ['/login'] // 白名单
 
 router.beforeEach(async(to, from, next) => {
   // start progress bar
@@ -21,18 +21,25 @@ router.beforeEach(async(to, from, next) => {
   const hasToken = getToken()
 
   if (hasToken) {
+    // 如果已经登录
     if (to.path === '/login') {
-      // if is logged in, redirect to the home page
       next({ path: '/' })
       NProgress.done()
     } else {
-      const hasGetUserInfo = store.getters.name
-      if (hasGetUserInfo) {
+      const hasRole = store.getters.role
+      if (hasRole) {
         next()
       } else {
         try {
-          // get user info
-          await store.dispatch('user/getInfo')
+          // 获取用户角色 ['admin'] 或,['developer','editor']
+          const { roles } = await store.dispatch('user/getInfo')
+          // 动态根据 角色 算出其对应有权限的路由
+          const accessRoutes = await store.dispatch('permission/generateRoutes', roles)
+          // 动态挂载路由
+          router.addRoutes(accessRoutes)
+          // addRouter是让挂载的路由生效，但是挂载后'router.options.routes'并未刷新(应该是个bug)
+          // 所以还需要手动将路由加入'router.options.routes'
+          router.options.routes = constantRoutes.concat(accessRoutes)
 
           next()
         } catch (error) {
@@ -46,7 +53,6 @@ router.beforeEach(async(to, from, next) => {
     }
   } else {
     /* has no token*/
-
     if (whiteList.indexOf(to.path) !== -1) {
       // in the free login whitelist, go directly
       next()

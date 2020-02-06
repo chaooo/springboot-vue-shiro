@@ -39,13 +39,6 @@
       where role_id = #{id,jdbcType=INTEGER}
     )
   </select>
-  <select id="selectPermissionByRoleid" resultType="java.lang.String">
-    select url from sys_permission
-    where id in (
-      select permission_id from sys_role_permission
-      where role_id = #{id,jdbcType=INTEGER}
-    )
-  </select>
   <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="top.itdn.server.entity.User" useGeneratedKeys="true">
     insert into sys_user
     <trim prefix="(" suffix=")" suffixOverrides=",">

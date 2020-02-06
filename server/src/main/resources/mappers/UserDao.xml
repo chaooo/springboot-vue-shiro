@@ -21,15 +21,31 @@
     from sys_user
     where id = #{id,jdbcType=INTEGER}
   </select>
-  <select id="selectAll" resultType="top.itdn.server.entity.User">
-    select
-    <include refid="Base_Column_List" />
-    from sys_user
-  </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from sys_user
     where id = #{id,jdbcType=INTEGER}
   </delete>
+  <select id="selectAll" resultType="top.itdn.server.entity.UserVo">
+    select
+    <include refid="Base_Column_List" />
+    from sys_user
+  </select>
+  <select id="selectVoByPrimaryKey" resultType="top.itdn.server.entity.UserVo">
+    select
+    <include refid="Base_Column_List" />
+    from sys_user
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectPermissionByRoleid" resultType="java.lang.String">
+    select perms from sys_permission
+    where id in (
+      select permission_id from sys_role_permission
+      where role_id = #{id,jdbcType=INTEGER}
+    )
+  </select>
+  <select id="selectRolesByRoleid" resultType="java.lang.String">
+    select role_name from sys_role where id = #{id,jdbcType=INTEGER}
+  </select>
   <insert id="insert" keyColumn="id" keyProperty="id" parameterType="top.itdn.server.entity.User" useGeneratedKeys="true">
     insert into sys_user (account, `PASSWORD`, salt,
                           nickname, roleId, createTime,

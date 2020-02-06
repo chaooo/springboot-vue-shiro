@@ -1,14 +1,14 @@
 package top.itdn.server.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import top.itdn.server.entity.User;
 import top.itdn.server.entity.UserVo;
 import top.itdn.server.service.SysService;
 import top.itdn.server.utils.ResponseVo;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * Description
@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
  * @date : 2020/1/20
  */
 @RestController
+@CrossOrigin(origins="*",methods= {RequestMethod.GET,RequestMethod.POST})
 public class SysApi {
 	/**
 	 * 注入服务类
@@ -29,35 +30,22 @@ public class SysApi {
 
 	/**
 	 * 注册(用户名，密码)
-	 * @param account
-	 * @param password
+	 * @param user
 	 * @return
 	 */
 	@PostMapping("/register")
-	public ResponseVo<String> register(String account, String password) {
-		return sysService.register(account, password);
+	public ResponseVo<String> register(User user) {
+		return sysService.register(user.getAccount(), user.getPassword());
 	}
 
 	/**
 	 * 登录(用户名，密码)
-	 * @param account
-	 * @param password
+	 * @param user
 	 * @return
 	 */
 	@PostMapping("/login")
-	public ResponseVo<String> login(String account, String password) {
-		return sysService.login(account, password);
-	}
-
-	/**
-	 * 获取当前用户信息，包括权限路径
-	 * @param request
-	 * @return UserVo
-	 */
-	@GetMapping("/user/info")
-	public ResponseVo<UserVo> userInfo(HttpServletRequest request) {
-		String token = request.getHeader("X-Token");
-		return sysService.userInfo(token);
+	public ResponseVo<String> login(@RequestBody User user) {
+		return sysService.login(user.getAccount(), user.getPassword());
 	}
 
 	/**

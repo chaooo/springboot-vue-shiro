@@ -33,30 +33,39 @@ public class UserServiceImpl implements UserService {
 	}
 
     /**
-     * 查找所有用户
+     * 获取当前用户信息，包括权限路径
      *
-     * @return List
+     * @param token
+     * @return UserVo
      */
     @Override
-    public ResponseVo<List<User>> loadUser() {
-        List<User> userList = userDao.selectAll();
-        return new ResponseVo<>(0, "sucess", userList);
+    public ResponseVo<UserVo> userInfo(String token) {
+        //根据id查找用户
+        int userId = JwtUtil.parseTokenUid(token);
+        UserVo userVo = userDao.selectVoByPrimaryKey(userId);
+        Set<String> roles = userDao.selectRolesByRoleid(userVo.getRoleid());
+        Set<String> permissions = userDao.selectPermissionByRoleid(userVo.getRoleid());
+        userVo.setRoles(roles);
+        userVo.setPermissions(permissions);
+        return new ResponseVo<>(0,"获取成功", userVo);
     }
 
     /**
-     * 根据id查找用户
-     * @param id 用户ID
-     * @return user
+     * 获取用户列表
+     * @return List<UserVo>
      */
     @Override
-    public ResponseVo<User> loadUser(int id) {
-        User user = userDao.selectByPrimaryKey(id);
-        if(user!=null) {
-            return new ResponseVo<>(0, "sucess", user);
-        }else {
-            return new ResponseVo<>(-1, "查无此人");
-        }
+    public ResponseVo<List<UserVo>> userList() {
+        List<UserVo> lists = userDao.selectAll();
+        lists.forEach(userVo -> {
+            Set<String> roles = userDao.selectRolesByRoleid(userVo.getRoleid());
+            Set<String> permissions = userDao.selectPermissionByRoleid(userVo.getRoleid());
+            userVo.setRoles(roles);
+            userVo.setPermissions(permissions);
+        });
+        return new ResponseVo<>(0,"获取成功", lists);
     }
+
     /**
      * 用户更新资料
      */

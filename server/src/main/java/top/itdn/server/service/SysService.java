@@ -5,6 +5,7 @@ import top.itdn.server.entity.UserVo;
 import top.itdn.server.utils.JwtUtil;
 import top.itdn.server.utils.ResponseVo;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -31,13 +32,6 @@ public interface SysService {
     ResponseVo<String> login(String account, String password);
 
 	/**
-	 * 获取当前用户信息，包括权限路径
-	 * @param token
-	 * @return UserVo
-	 */
-	ResponseVo<UserVo> userInfo(String token);
-
-	/**
 	 * 根据account查找用户，自定义Realm中调用
 	 * @param account
 	 * @return User
@@ -57,4 +51,5 @@ public interface SysService {
 	 * @return  Set<permissions>
 	 */
 	Set<String> getPermissionsByRoleid(Integer roleid);
+
 }

@@ -1,8 +1,6 @@
 package top.itdn.server.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-
 import java.util.Date;
 import java.util.Set;
 
@@ -28,6 +26,10 @@ public class UserVo {
      */
     private String nickname;
     /**
+     * 用户头像
+     */
+    private String avatar;
+    /**
      * 角色ID
      */
     private Integer roleid;
@@ -44,8 +46,11 @@ public class UserVo {
      */
     private String deletestatus;
     /**
-     * 权限路径列表
+     * 角色列表['admin']
      */
-    private Set<String> menus;
-
+    private Set<String> roles;
+    /**
+     * 权限列表['user:add', 'user:delete', 'user:update', 'user:list']
+     */
+    private Set<String> permissions;
 }

@@ -27,13 +27,11 @@ public class User implements Serializable {
     /**
      * 用户密码
      */
-    @JsonIgnore
     private String password;
 
     /**
      * 随机盐
      */
-    @JsonIgnore
     private String salt;
 
     /**

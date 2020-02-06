@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * Description
@@ -23,14 +24,25 @@ public class UserApi {
 	 */
 	@Autowired
 	private UserService userService;
+
 	/**
-	 * 获取所有用户信息
-	 * @return
+	 * 获取当前用户信息，包括权限路径
+	 * @param request
+	 * @return UserVo
 	 */
-	@RequiresPermissions("user:list")
+	@GetMapping("/user/info")
+	public ResponseVo<UserVo> userInfo(HttpServletRequest request) {
+		String token = request.getHeader("X-Token");
+		return userService.userInfo(token);
+	}
+
+	/**
+	 * 获取用户列表
+	 * @return List<UserVo>
+	 */
 	@GetMapping("/user/list")
-	public ResponseVo list() {
-		return userService.loadUser();
+	public ResponseVo<List<UserVo>> userList() {
+		return userService.userList();
 	}
 
 	/**
@@ -57,8 +69,5 @@ public class UserApi {
 		String token = request.getHeader("X-Token");
 		return userService.modifyPassword(token, password, newPassword);
 	}
-
-
-
 
 }

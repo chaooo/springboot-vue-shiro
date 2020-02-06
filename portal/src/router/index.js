@@ -30,6 +30,7 @@ import Layout from '@/layout'
  * a base page that does not have permission requirements
  * all roles can be accessed
  */
+// 静态路由
 export const constantRoutes = [
   {
     path: '/login',
@@ -51,28 +52,57 @@ export const constantRoutes = [
       path: 'dashboard',
       name: 'Dashboard',
       component: () => import('@/views/dashboard/index'),
-      meta: { title: 'Dashboard', icon: 'dashboard' }
+      meta: { title: '首页', icon: 'dashboard' }
     }]
+  }
+]
+
+// 动态路由
+export const asyncRoutes = [
+  {
+    path: '/user',
+    component: Layout,
+    redirect: '/user/list',
+    name: 'User',
+    meta: { title: '用户管理', icon: 'example' },
+    children: [
+      {
+        path: 'list',
+        name: 'UserList',
+        component: () => import('@/views/user/list'),
+        meta: { title: '用户列表', icon: 'nested' }
+      },
+      {
+        path: 'edit',
+        name: 'UserEdit',
+        component: () => import('@/views/user/form'),
+        meta: { title: '添加用户', icon: 'form' }
+      }
+    ]
   },
 
   {
-    path: '/example',
+    path: '/admin',
     component: Layout,
-    redirect: '/example/table',
-    name: 'Example',
-    meta: { title: 'Example', icon: 'example' },
     children: [
       {
-        path: 'table',
-        name: 'Table',
-        component: () => import('@/views/table/index'),
-        meta: { title: 'Table', icon: 'table' }
-      },
+        path: 'index',
+        name: 'Form1',
+        component: () => import('@/views/test/index'),
+        meta: { title: '管理员角色测试', icon: 'form', roles: ['admin'] }
+      }
+    ]
+  },
+
+  {
+    path: '/editor',
+    component: Layout,
+    children: [
       {
-        path: 'tree',
-        name: 'Tree',
-        component: () => import('@/views/tree/index'),
-        meta: { title: 'Tree', icon: 'tree' }
+        path: 'index',
+        name: 'Form2',
+        component: () => import('@/views/test/index'),
+        meta: { title: '编辑角色测试', icon: 'form', roles: ['editor'] }
       }
     ]
   },
@@ -83,9 +113,9 @@ export const constantRoutes = [
     children: [
       {
         path: 'index',
-        name: 'Form',
-        component: () => import('@/views/form/index'),
-        meta: { title: 'Form', icon: 'form' }
+        name: 'Form3',
+        component: () => import('@/views/test/index'),
+        meta: { title: '用户角色测试', icon: 'form', roles: ['user'] }
       }
     ]
   },
@@ -93,62 +123,32 @@ export const constantRoutes = [
   {
     path: '/nested',
     component: Layout,
-    redirect: '/nested/menu1',
+    redirect: '/nested/menu3',
     name: 'Nested',
-    meta: {
-      title: 'Nested',
-      icon: 'nested'
-    },
+    meta: { title: '子菜单权限测试', icon: 'form' },
     children: [
       {
         path: 'menu1',
-        component: () => import('@/views/nested/menu1/index'), // Parent router-view
+        component: () => import('@/views/test/index'), // Parent router-view
         name: 'Menu1',
-        meta: { title: 'Menu1' },
-        children: [
-          {
-            path: 'menu1-1',
-            component: () => import('@/views/nested/menu1/menu1-1'),
-            name: 'Menu1-1',
-            meta: { title: 'Menu1-1' }
-          },
-          {
-            path: 'menu1-2',
-            component: () => import('@/views/nested/menu1/menu1-2'),
-            name: 'Menu1-2',
-            meta: { title: 'Menu1-2' },
-            children: [
-              {
-                path: 'menu1-2-1',
-                component: () => import('@/views/nested/menu1/menu1-2/menu1-2-1'),
-                name: 'Menu1-2-1',
-                meta: { title: 'Menu1-2-1' }
-              },
-              {
-                path: 'menu1-2-2',
-                component: () => import('@/views/nested/menu1/menu1-2/menu1-2-2'),
-                name: 'Menu1-2-2',
-                meta: { title: 'Menu1-2-2' }
-              }
-            ]
-          },
-          {
-            path: 'menu1-3',
-            component: () => import('@/views/nested/menu1/menu1-3'),
-            name: 'Menu1-3',
-            meta: { title: 'Menu1-3' }
-          }
-        ]
+        meta: { title: '管理员可见', roles: ['admin'] }
       },
       {
         path: 'menu2',
-        component: () => import('@/views/nested/menu2/index'),
-        meta: { title: 'menu2' }
+        component: () => import('@/views/test/index'), // Parent router-view
+        name: 'Menu1',
+        meta: { title: '编辑者可见', roles: ['editor'] }
+      },
+      {
+        path: 'menu3',
+        component: () => import('@/views/test/index'), // Parent router-view
+        name: 'Menu1',
+        meta: { title: '普通用户可见', roles: ['user'] }
       }
     ]
   },
 
-  {
+  /* {
     path: 'external-link',
     component: Layout,
     children: [
@@ -157,7 +157,7 @@ export const constantRoutes = [
         meta: { title: 'External Link', icon: 'link' }
       }
     ]
-  },
+  },*/
 
   // 404 page must be placed at the end !!!
   { path: '*', redirect: '/404', hidden: true }
